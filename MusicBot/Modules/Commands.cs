@@ -103,9 +103,16 @@ namespace MusicBot
         [Command("skip", RunMode = RunMode.Async)]
         public async Task Skip()
         {
-            
-            
-            
+
+            if (_serverProperties[Context.Guild.Id].Playing == true)
+            {
+                
+                _serverProperties[Context.Guild.Id].Player.Kill();
+
+                await Context.Channel.SendMessageAsync("Skipped");
+
+            }
+
         }
         
         #endregion
@@ -145,6 +152,8 @@ namespace MusicBot
         {
             
             var ffmpeg = CreateStream(path);
+            
+            _serverProperties[Context.Guild.Id].Player = ffmpeg;
 
             ffmpeg.EnableRaisingEvents = true;
 
@@ -157,7 +166,7 @@ namespace MusicBot
             await output.CopyToAsync(discord);
             
             await discord.FlushAsync();
-            
+
         }
 
         private async Task<IAudioClient> Join()
