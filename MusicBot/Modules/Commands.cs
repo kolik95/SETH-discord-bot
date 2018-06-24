@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
@@ -46,15 +47,14 @@ namespace MusicBot
 
             else
             {
-                               
-                audioClient = await Join();
                 
                 _serverProperties.TryAdd(Context.Guild.Id, 
-                    new ServerProperties(false, false, new List<string>(), audioClient ));
+                    new ServerProperties(false, false, new List<string>()));
+                
+                audioClient = await Join();
+                
 
             }
-            
-            _serverProperties[Context.Guild.Id].SetChannel(audioClient);
             
             var url = GetStreamUrl(link);
 
@@ -84,7 +84,7 @@ namespace MusicBot
             if (_serverProperties[Context.Guild.Id].Repeat)
             {
 
-                _serverProperties[Context.Guild.Id].SetRepeat(false);
+                _serverProperties[Context.Guild.Id].Repeat = false;
 
                 await Context.Channel.SendMessageAsync("Repeating off");
 
@@ -93,7 +93,7 @@ namespace MusicBot
             else
             {
 
-                _serverProperties[Context.Guild.Id].SetRepeat(true);
+                _serverProperties[Context.Guild.Id].Repeat = true;
 
                 await Context.Channel.SendMessageAsync("Repeating on");
 
@@ -165,14 +165,14 @@ namespace MusicBot
             var target = ((IVoiceState) Context.Message.Author).VoiceChannel;
 
             IGuild guild = Context.Guild;
-
+            
             IAudioClient client;
             
             if (target.Guild.Id != guild.Id) return null;
 
             var audioClient = await target.ConnectAsync();
 
-            _serverProperties[guild.Id].SetChannel(audioClient);
+            _serverProperties[Context.Guild.Id].ConnectedChannel = audioClient;
             
             await Context.Channel.SendMessageAsync("Connected to voice.");
 
@@ -197,8 +197,8 @@ namespace MusicBot
             {
                 
                 Console.WriteLine("Playing");
-                
-                _serverProperties[guild.Id].SetPlaying(true);
+
+                _serverProperties[guild.Id].Playing = true;
                 
                 await SendAsync(_serverProperties[guild.Id].ConnectedChannel , _serverProperties[guild.Id].Queue[0]);              
 
@@ -207,8 +207,8 @@ namespace MusicBot
 
         private void StreamEnded(object sender, EventArgs e)
         {
-            
-            _serverProperties[Context.Guild.Id].SetPlaying(false);
+
+            _serverProperties[Context.Guild.Id].Playing = false;
 
             if(!_serverProperties[Context.Guild.Id].Repeat)
                _serverProperties[Context.Guild.Id].Queue.RemoveAt(0);
@@ -226,11 +226,11 @@ namespace MusicBot
 
             _serverProperties[guild.Id].Queue.Clear();
 
-            _serverProperties[guild.Id].SetChannel(null);
+            _serverProperties[guild.Id].ConnectedChannel = null;
             
             await Context.Channel.SendMessageAsync("Leaving voice.");
-            
-            _serverProperties[guild.Id].SetPlaying(false);
+
+            _serverProperties[guild.Id].Playing = false;
 
             await client.StopAsync();
     

@@ -5,7 +5,7 @@ using Discord.Audio;
 
 namespace MusicBot
 {
-    public struct ServerProperties
+    public class ServerProperties
     {
         
         public List<string> Queue { get; set; }
@@ -16,35 +16,13 @@ namespace MusicBot
         
         public IAudioClient ConnectedChannel { get; set; }
 
-        public ServerProperties(bool Repeat, bool Playing, List<string> Queue, IAudioClient ConnectedChannel)
+        public ServerProperties(bool Repeat, bool Playing, List<string> Queue)
         {
             this.Queue = Queue;
             this.Repeat = Repeat;
             this.Playing = Playing;
-            this.ConnectedChannel = ConnectedChannel;
+            ConnectedChannel = null;
 
-        }
-
-        public void SetRepeat(bool value)
-        {
-
-            Repeat = value;
-
-        }
-        
-        public void SetPlaying(bool value)
-        {
-
-            Playing = value;
-
-        }
-        
-        public void SetChannel(IAudioClient value)
-        {
-
-            ConnectedChannel = value;
-
-        }
-        
+        }      
     }
 }
