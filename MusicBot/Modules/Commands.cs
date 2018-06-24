@@ -12,20 +12,19 @@ using Discord.Commands;
 namespace MusicBot
 {
     public class Commands : ModuleBase<SocketCommandContext>
-    {
-        private static readonly ConcurrentDictionary<ulong, IAudioClient> ConnectedChannels =
-            new ConcurrentDictionary<ulong, IAudioClient>();
+    {        
+        private static readonly ConcurrentDictionary<ulong, ServerProperties> _serverProperties = 
+            new ConcurrentDictionary<ulong, ServerProperties>();
 
-        private static ConcurrentDictionary<ulong, List<string>> ServerQueues = new ConcurrentDictionary<ulong, List<string>>();
-        
-        private static ConcurrentDictionary<ulong, bool> ServerIsPlaying = new ConcurrentDictionary<ulong, bool>();
-        
-        private static ConcurrentDictionary<ulong, bool> ServerIsRepeating = new ConcurrentDictionary<ulong, bool>();
 
+        #region Commands
+        
         [Command("Test")]
-        public async Task a()
+        public async Task A()
         {
+            
             await Context.Channel.SendMessageAsync("Test");
+            
         }
 
         [Command("play", RunMode = RunMode.Async)]
@@ -33,27 +32,35 @@ namespace MusicBot
         {
 
             IAudioClient audioClient;
-            
-            if (ConnectedChannels.ContainsKey(Context.Guild.Id))
-                audioClient = ConnectedChannels[Context.Guild.Id];
+
+            if (_serverProperties.ContainsKey(Context.Guild.Id))
+            {
+
+                if (_serverProperties[Context.Guild.Id].ConnectedChannel != null)
+                    audioClient = _serverProperties[Context.Guild.Id].ConnectedChannel;
+                
+                else
+                    audioClient = await Join();
+
+            }
 
             else
+            {
+                               
                 audioClient = await Join();
+                
+                _serverProperties.TryAdd(Context.Guild.Id, 
+                    new ServerProperties(false, false, new List<string>(), audioClient ));
 
-            if (!ServerQueues.ContainsKey(Context.Guild.Id))
-                ServerQueues.TryAdd(Context.Guild.Id, new List<string>());
-
-            if (!ServerIsPlaying.ContainsKey(Context.Guild.Id))
-                ServerIsPlaying.TryAdd(Context.Guild.Id, false);
-
-            if (!ServerIsRepeating.ContainsKey(Context.Guild.Id))
-                ServerIsRepeating.TryAdd(Context.Guild.Id, false);
+            }
+            
+            _serverProperties[Context.Guild.Id].SetChannel(audioClient);
             
             var url = GetStreamUrl(link);
 
             string streamUrl = url.StandardOutput.ReadLine();
-
-            ServerQueues[Context.Guild.Id].Add(streamUrl);
+            
+            _serverProperties[Context.Guild.Id].Queue.Add(streamUrl);
 
             await Context.Channel.SendMessageAsync("Added to queue.");
 
@@ -74,29 +81,38 @@ namespace MusicBot
         public async Task Repeat()
         {
 
-            if (ServerIsRepeating[Context.Guild.Id])
+            if (_serverProperties[Context.Guild.Id].Repeat)
             {
 
-                ServerIsRepeating[Context.Guild.Id] = false;
+                _serverProperties[Context.Guild.Id].SetRepeat(false);
 
                 await Context.Channel.SendMessageAsync("Repeating off");
 
-                return;
-
             }
             
-            if (!ServerIsRepeating[Context.Guild.Id])
+            else
             {
 
-                ServerIsRepeating[Context.Guild.Id] = true;
+                _serverProperties[Context.Guild.Id].SetRepeat(true);
 
                 await Context.Channel.SendMessageAsync("Repeating on");
 
             }
-
-
         }
 
+        [Command("skip", RunMode = RunMode.Async)]
+        public async Task Skip()
+        {
+            
+            
+            
+        }
+        
+        #endregion
+
+        
+        #region Processes
+        
         private Process CreateStream(string path)
         {
             var ffmpeg = new ProcessStartInfo
@@ -121,6 +137,10 @@ namespace MusicBot
             return Process.Start(yt);
         }
 
+        #endregion
+        
+        #region Utils
+        
         private async Task SendAsync(IAudioClient client, string path)
         {
             
@@ -147,25 +167,24 @@ namespace MusicBot
             IGuild guild = Context.Guild;
 
             IAudioClient client;
-
-            if (ConnectedChannels.TryGetValue(guild.Id, out client)) return null;
-
+            
             if (target.Guild.Id != guild.Id) return null;
 
             var audioClient = await target.ConnectAsync();
 
-            if (ConnectedChannels.TryAdd(guild.Id, audioClient))
-                await Context.Channel.SendMessageAsync("Connected to voice.");
+            _serverProperties[guild.Id].SetChannel(audioClient);
+            
+            await Context.Channel.SendMessageAsync("Connected to voice.");
 
             return audioClient;
         }
 
         private async Task PlayQueue(IGuild guild)
         {
-
-            if (!ConnectedChannels.ContainsKey(guild.Id)) return;
-
-            if (ServerQueues[guild.Id].Count == 0)
+            
+            if (_serverProperties[guild.Id].ConnectedChannel == null) return;
+            
+            if (_serverProperties[guild.Id].Queue.Count == 0)
             {
 
                 await Leave(guild);
@@ -174,25 +193,25 @@ namespace MusicBot
                 
             }
 
-            if (ServerIsPlaying[guild.Id] == false)
+            if (_serverProperties[guild.Id].Playing == false)
             {
                 
-                Console.WriteLine("Hraju");
+                Console.WriteLine("Playing");
                 
-                ServerIsPlaying[guild.Id] = true;
+                _serverProperties[guild.Id].SetPlaying(true);
                 
-                await SendAsync(ConnectedChannels[guild.Id] , ServerQueues[guild.Id][0]);              
+                await SendAsync(_serverProperties[guild.Id].ConnectedChannel , _serverProperties[guild.Id].Queue[0]);              
 
             }    
         }
 
         private void StreamEnded(object sender, EventArgs e)
         {
+            
+            _serverProperties[Context.Guild.Id].SetPlaying(false);
 
-            ServerIsPlaying[Context.Guild.Id] = false;
-
-            if(!ServerIsRepeating[Context.Guild.Id])
-                ServerQueues[Context.Guild.Id].RemoveAt(0);
+            if(!_serverProperties[Context.Guild.Id].Repeat)
+               _serverProperties[Context.Guild.Id].Queue.RemoveAt(0);
             
             PlayQueue(Context.Guild);
 
@@ -200,21 +219,24 @@ namespace MusicBot
         
         private async Task Leave(IGuild guild)
         {
-    
-            IAudioClient client;
+            
+            if (_serverProperties[guild.Id].ConnectedChannel == null) return;
+            
+            IAudioClient client = _serverProperties[guild.Id].ConnectedChannel;
 
-            ServerQueues[guild.Id].Clear();
+            _serverProperties[guild.Id].Queue.Clear();
 
-            if (ConnectedChannels.TryRemove(guild.Id, out client))
-            {
-                await Context.Channel.SendMessageAsync("Leaving voice.");
-                
-                ServerIsPlaying[Context.Guild.Id] = false;
+            _serverProperties[guild.Id].SetChannel(null);
+            
+            await Context.Channel.SendMessageAsync("Leaving voice.");
+            
+            _serverProperties[guild.Id].SetPlaying(false);
 
-                await client.StopAsync();
-            }
+            await client.StopAsync();
     
         }
+        
+        #endregion
         
     }           
 }
