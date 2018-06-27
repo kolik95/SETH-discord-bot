@@ -19,17 +19,9 @@ namespace MusicBot
 
 
         #region Commands
-        
-        [Command("Test")]
-        public async Task A()
-        {
-            
-            await Context.Channel.SendMessageAsync("Test");
-            
-        }
 
         [Command("play", RunMode = RunMode.Async)]
-        public async Task JoinChannel(string link)
+        public async Task JoinChannel([Remainder]string link)
         {
 
             IAudioClient audioClient;
@@ -56,7 +48,7 @@ namespace MusicBot
 
             }
             
-            var url = GetStreamUrl(link);
+            var url = GetStreamUrl(link.Replace(" ",""));
 
             string streamUrl = url.StandardOutput.ReadLine();
             
@@ -137,7 +129,7 @@ namespace MusicBot
             var yt = new ProcessStartInfo
             {
                 FileName = "youtube-dl.exe",
-                Arguments = $"-f bestaudio -g \"{path}\"",
+                Arguments = $"-g -x ytsearch:\"{path}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };
