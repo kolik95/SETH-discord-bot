@@ -42,7 +42,7 @@ namespace MusicBot
 			{
 
 				_serverProperties.TryAdd(Context.Guild.Id,
-					new ServerProperties(false, false, new List<string>()));
+					new ServerProperties());
 
 				audioClient = await Join();
 
@@ -50,10 +50,22 @@ namespace MusicBot
 			}
 
 			if (link.Contains("soundcloud.com"))
+			{
+
 				url = GetStreamUrl($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
 
+				_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
+
+			}
+
 			else
-				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link.Replace(" ", "")}\"");
+			{
+			    
+				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link}\"");
+			    
+			    _serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e ytsearch:\"{link}\"").StandardOutput.ReadLine());
+			    
+			}   
 
             string streamUrl = url.StandardOutput.ReadLine();
             
@@ -101,7 +113,7 @@ namespace MusicBot
         public async Task Skip()
         {
 
-            if (_serverProperties[Context.Guild.Id].Playing == true)
+            if (_serverProperties[Context.Guild.Id].Playing)
             {
                 
                 _serverProperties[Context.Guild.Id].Player.Kill();
@@ -111,11 +123,27 @@ namespace MusicBot
             }
 
         }
-        
+
+		[Command("queue", RunMode = RunMode.Async)]
+		public async Task Queue()
+		{
+
+		    string queue = string.Empty;
+
+			foreach (var name in _serverProperties[Context.Guild.Id].QueueNames)
+			{
+
+				queue += name + "\n";
+
+			}
+			
+			await Context.Channel.SendMessageAsync(queue);
+
+		}
         #endregion
 
         #region Processes
-        
+
         private Process CreateStream(string path)
         {
             var ffmpeg = new ProcessStartInfo
@@ -215,9 +243,15 @@ namespace MusicBot
 
             _serverProperties[Context.Guild.Id].Playing = false;
 
-            if(!_serverProperties[Context.Guild.Id].Repeat)
-               _serverProperties[Context.Guild.Id].Queue.RemoveAt(0);
-            
+            if (!_serverProperties[Context.Guild.Id].Repeat)
+            {
+
+                _serverProperties[Context.Guild.Id].Queue.RemoveAt(0);
+                
+                _serverProperties[Context.Guild.Id].QueueNames.RemoveAt(0);
+
+            }
+
             PlayQueue(Context.Guild);
 
         }
@@ -231,6 +265,8 @@ namespace MusicBot
 
             _serverProperties[guild.Id].Queue.Clear();
 
+            _serverProperties[guild.Id].QueueNames.Clear();
+            
             _serverProperties[guild.Id].ConnectedChannel = null;
             
             await Context.Channel.SendMessageAsync("Leaving voice.");
