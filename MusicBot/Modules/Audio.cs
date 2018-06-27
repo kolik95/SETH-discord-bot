@@ -17,38 +17,43 @@ namespace MusicBot
         private static readonly ConcurrentDictionary<ulong, ServerProperties> _serverProperties = 
             new ConcurrentDictionary<ulong, ServerProperties>();
 
+		#region Commands
 
-        #region Commands
+		[Command("play", RunMode = RunMode.Async)]
+		public async Task JoinChannel([Remainder]string link)
+		{
 
-        [Command("play", RunMode = RunMode.Async)]
-        public async Task JoinChannel([Remainder]string link)
-        {
+			IAudioClient audioClient;
 
-            IAudioClient audioClient;
+			Process url;
 
-            if (_serverProperties.ContainsKey(Context.Guild.Id))
-            {
+			if (_serverProperties.ContainsKey(Context.Guild.Id))
+			{
 
-                if (_serverProperties[Context.Guild.Id].ConnectedChannel != null)
-                    audioClient = _serverProperties[Context.Guild.Id].ConnectedChannel;
-                
-                else
-                    audioClient = await Join();
+				if (_serverProperties[Context.Guild.Id].ConnectedChannel != null)
+					audioClient = _serverProperties[Context.Guild.Id].ConnectedChannel;
 
-            }
+				else
+					audioClient = await Join();
 
-            else
-            {
-                
-                _serverProperties.TryAdd(Context.Guild.Id, 
-                    new ServerProperties(false, false, new List<string>()));
-                
-                audioClient = await Join();
-                
+			}
 
-            }
-            
-            var url = GetStreamUrl(link.Replace(" ",""));
+			else
+			{
+
+				_serverProperties.TryAdd(Context.Guild.Id,
+					new ServerProperties(false, false, new List<string>()));
+
+				audioClient = await Join();
+
+
+			}
+
+			if (link.Contains("soundcloud.com"))
+				url = GetStreamUrl($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
+
+			else
+				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link.Replace(" ", "")}\"");
 
             string streamUrl = url.StandardOutput.ReadLine();
             
@@ -109,7 +114,6 @@ namespace MusicBot
         
         #endregion
 
-        
         #region Processes
         
         private Process CreateStream(string path)
@@ -124,12 +128,12 @@ namespace MusicBot
             return Process.Start(ffmpeg);
         }
 
-        private Process GetStreamUrl(string path)
+        private Process GetStreamUrl(string arguments)
         {
             var yt = new ProcessStartInfo
             {
                 FileName = "youtube-dl.exe",
-                Arguments = $"-g -x ytsearch:\"{path}\"",
+                Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };
