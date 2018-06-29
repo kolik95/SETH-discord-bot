@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
 using Discord.Commands;
+using Newtonsoft.Json.Schema;
 
 namespace MusicBot
 {
@@ -77,6 +78,48 @@ namespace MusicBot
 
         }
 
+	    [Command("playlocal", RunMode = RunMode.Async)]
+	    public async Task PlayLocal([Remainder]string link)
+	    {
+		    
+		    IAudioClient audioClient;
+
+		    Process url;
+
+		    if (!File.Exists(link)) return;
+		    
+		    if (_serverProperties.ContainsKey(Context.Guild.Id))
+		    {
+
+			    if (_serverProperties[Context.Guild.Id].ConnectedChannel != null)
+				    audioClient = _serverProperties[Context.Guild.Id].ConnectedChannel;
+
+			    else
+				    audioClient = await Join();
+
+		    }
+
+		    else
+		    {
+
+			    _serverProperties.TryAdd(Context.Guild.Id,
+				    new ServerProperties());
+
+			    audioClient = await Join();
+
+
+		    };
+
+		    _serverProperties[Context.Guild.Id].QueueNames.Add(link);
+		    
+		    _serverProperties[Context.Guild.Id].Queue.Add(link);
+
+		    await Context.Channel.SendMessageAsync("Added to queue.");
+		    
+		    await PlayQueue(Context.Guild);
+		    
+	    }
+	    
         [Command("leave", RunMode = RunMode.Async)]
         public async Task LeaveChannel()
         {
@@ -115,7 +158,9 @@ namespace MusicBot
 
             if (_serverProperties[Context.Guild.Id].Playing)
             {
-                
+
+	            _serverProperties[Context.Guild.Id].Repeat = false;
+	            
                 _serverProperties[Context.Guild.Id].Player.Kill();
 
                 await Context.Channel.SendMessageAsync("Skipped");
