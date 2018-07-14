@@ -15,6 +15,8 @@ namespace MusicBot
 
 		public List<string> QueueThumbnails { get; }
 
+		public List<string> QueueURLs { get; }
+
 		public bool Repeat { get; set; }
 
         public bool Playing { get; set; }
@@ -28,6 +30,7 @@ namespace MusicBot
             Queue = new List<string>();
 			QueueNames = new List<string>();
 			QueueThumbnails = new List<string>();
+			QueueURLs = new List<string>();
 			Repeat = false;
             Playing = false;
             ConnectedChannel = null;

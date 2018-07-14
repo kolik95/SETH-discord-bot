@@ -68,6 +68,8 @@ namespace MusicBot
 
 				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
 
+				_serverProperties[Context.Guild.Id].QueueURLs.Add(link.Replace(" ", ""));
+
 			}
 
 			else
@@ -80,7 +82,9 @@ namespace MusicBot
 				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link}\"");
 			    
 			    _serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e ytsearch:\"{link}\"").StandardOutput.ReadLine());
-			    
+
+				_serverProperties[Context.Guild.Id].QueueURLs.Add("https://www.youtube.com/watch?v=" + GetStreamUrl($"--get-id ytsearch:\"{link}\"").StandardOutput.ReadLine());
+
 			}   
 
             string streamUrl = url.StandardOutput.ReadLine();
@@ -289,7 +293,7 @@ namespace MusicBot
                 
                 Console.WriteLine("Playing");
 
-				await Context.Channel.SendMessageAsync("",false, CreateEmbed(_serverProperties[guild.Id].QueueNames[0], _serverProperties[guild.Id].QueueThumbnails[0]));
+				await Context.Channel.SendMessageAsync("",false, CreateEmbed(_serverProperties[guild.Id].QueueNames[0], _serverProperties[guild.Id].QueueThumbnails[0], _serverProperties[guild.Id].QueueURLs[0]));
 
                 _serverProperties[guild.Id].Playing = true;
                 
@@ -311,6 +315,8 @@ namespace MusicBot
                 _serverProperties[Context.Guild.Id].QueueNames.RemoveAt(0);
 
 				_serverProperties[Context.Guild.Id].QueueThumbnails.RemoveAt(0);
+
+				_serverProperties[Context.Guild.Id].QueueURLs.RemoveAt(0);
 
 			}
 
@@ -339,12 +345,14 @@ namespace MusicBot
     
         }
 
-		private Embed CreateEmbed(string title, string thumbnail)
+		private Embed CreateEmbed(string title, string thumbnail, string url)
 		{
 
 			EmbedBuilder builder = new EmbedBuilder();
 
 			builder.WithTitle($"Playing: {title}");
+
+			builder.WithUrl(url);
 
 			builder.WithImageUrl(thumbnail);
 
