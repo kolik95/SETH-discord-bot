@@ -59,9 +59,24 @@ namespace MusicBot
 
 			}
 
+			else if (link.Contains("youtube.com"))
+			{
+
+				url = GetStreamUrl($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
+
+				_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
+
+				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
+
+			}
+
 			else
 			{
-			    
+
+				await Context.Channel.SendMessageAsync($"Searching for request by {Context.Message.Author.Username}: {link}");
+	
+				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail ytsearch:\"{link}\"").StandardOutput.ReadLine());
+
 				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link}\"");
 			    
 			    _serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e ytsearch:\"{link}\"").StandardOutput.ReadLine());
@@ -71,8 +86,6 @@ namespace MusicBot
             string streamUrl = url.StandardOutput.ReadLine();
             
             _serverProperties[Context.Guild.Id].Queue.Add(streamUrl);
-
-            await Context.Channel.SendMessageAsync("Added to queue.");
 
             await PlayQueue(Context.Guild);
 
@@ -276,6 +289,8 @@ namespace MusicBot
                 
                 Console.WriteLine("Playing");
 
+				await Context.Channel.SendMessageAsync("",false, CreateEmbed(_serverProperties[guild.Id].QueueNames[0], _serverProperties[guild.Id].QueueThumbnails[0]));
+
                 _serverProperties[guild.Id].Playing = true;
                 
                 await SendAsync(_serverProperties[guild.Id].ConnectedChannel , _serverProperties[guild.Id].Queue[0]);              
@@ -295,7 +310,9 @@ namespace MusicBot
                 
                 _serverProperties[Context.Guild.Id].QueueNames.RemoveAt(0);
 
-            }
+				_serverProperties[Context.Guild.Id].QueueThumbnails.RemoveAt(0);
+
+			}
 
             PlayQueue(Context.Guild);
 
@@ -321,6 +338,21 @@ namespace MusicBot
             await client.StopAsync();
     
         }
+
+		private Embed CreateEmbed(string title, string thumbnail)
+		{
+
+			EmbedBuilder builder = new EmbedBuilder();
+
+			builder.WithTitle($"Playing: {title}");
+
+			builder.WithImageUrl(thumbnail);
+
+			builder.WithColor(Color.Blue);
+
+			return builder.Build();
+
+		}
         
         #endregion
         

@@ -9,11 +9,13 @@ namespace MusicBot
     public class ServerProperties
     {
         
-        public List<string> Queue { get;}
+        public List<string> Queue { get; }
 
 		public List<string> QueueNames { get; }
 
-        public bool Repeat { get; set; }
+		public List<string> QueueThumbnails { get; }
+
+		public bool Repeat { get; set; }
 
         public bool Playing { get; set; }
         
@@ -25,7 +27,8 @@ namespace MusicBot
         {
             Queue = new List<string>();
 			QueueNames = new List<string>();
-            Repeat = false;
+			QueueThumbnails = new List<string>();
+			Repeat = false;
             Playing = false;
             ConnectedChannel = null;
             Player = null;
