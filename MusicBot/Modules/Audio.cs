@@ -65,26 +65,7 @@ namespace MusicBot
 			else if (link.Contains("youtube.com"))
 			{
 
-				var thread1 = new Thread(() => AddSong($"-f bestaudio -g \"{link.Replace(" ", "")}\""));
-
-				thread1.Start();
-
-				var thread2 = new Thread(() => AddThumbnail($"--get-thumbnail \"{link.Replace(" ", "")}\""));
-
-				thread2.Start();
-
-				var thread3 = new Thread(() => AddURL(link.Replace(" ", ""), false));
-
-				thread3.Start();
-
-				var thread4 = new Thread(() => AddName($"-e \"{link.Replace(" ", "")}\""));
-
-				thread4.Start();
-
-				thread1.Join();
-				thread2.Join();
-				thread3.Join();
-				thread4.Join();
+				LaunchThreads($"-f bestaudio -g \"{link.Replace(" ", "")}\"", $"--get-thumbnail \"{link.Replace(" ", "")}\"", link.Replace(" ", ""), $"-e \"{link.Replace(" ", "")}\"", false);
 
 			}
 
@@ -100,28 +81,7 @@ namespace MusicBot
 
 				}.Build());
 
-				var builder = new StringBuilder();
-
-				var thread1 = new Thread(() => AddSong($"-f bestaudio -g -x ytsearch:\"{link}\""));
-
-				thread1.Start();
-
-				var thread2 = new Thread(() => AddThumbnail($"--get-thumbnail ytsearch:\"{link}\""));
-
-				thread2.Start();
-
-				var thread3 = new Thread(() => AddURL($"--get-id ytsearch:\"{link}\"", true));
-
-				thread3.Start();
-
-				var thread4 = new Thread(() => AddName($"-e ytsearch:\"{link}\""));
-
-				thread4.Start();
-
-				thread1.Join();
-				thread2.Join();
-				thread3.Join();
-				thread4.Join();
+				LaunchThreads($"-f bestaudio -g -x ytsearch:\"{link}\"", $"--get-thumbnail ytsearch:\"{link}\"", $"--get-id ytsearch:\"{link}\"", $"-e ytsearch:\"{link}\"", true);
 
 			}
 
@@ -454,7 +414,33 @@ namespace MusicBot
 		private void AddName(string args)
 		{
 
-			_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl(args).StandardOutput.ReadLine());
+			_serverProperties[Context.Guild.Id].QueueNames.Add(Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(GetStreamUrl(args).StandardOutput.ReadLine())));
+
+		}
+
+		private void LaunchThreads(string args1, string args2, string args3, string args4, bool link)
+		{
+
+			var thread1 = new Thread(() => AddSong(args1));
+
+			thread1.Start();
+
+			var thread2 = new Thread(() => AddThumbnail(args2));
+
+			thread2.Start();
+
+			var thread3 = new Thread(() => AddURL(args3, link));
+
+			thread3.Start();
+
+			var thread4 = new Thread(() => AddName(args4));
+
+			thread4.Start();
+
+			thread1.Join();
+			thread2.Join();
+			thread3.Join();
+			thread4.Join();
 
 		}
 
