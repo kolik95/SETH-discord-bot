@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
@@ -64,15 +65,26 @@ namespace MusicBot
 			else if (link.Contains("youtube.com"))
 			{
 
-				url = GetStreamUrl($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
+				var thread1 = new Thread(() => AddSong($"-f bestaudio -g \"{link.Replace(" ", "")}\""));
 
-				_serverProperties[Context.Guild.Id].Queue.Add(url.StandardOutput.ReadLine());
+				thread1.Start();
 
-				_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
+				var thread2 = new Thread(() => AddThumbnail($"--get-thumbnail \"{link.Replace(" ", "")}\""));
 
-				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
+				thread2.Start();
 
-				_serverProperties[Context.Guild.Id].QueueURLs.Add(link.Replace(" ", ""));
+				var thread3 = new Thread(() => AddURL(link.Replace(" ", ""), false));
+
+				thread3.Start();
+
+				var thread4 = new Thread(() => AddName($"-e \"{link.Replace(" ", "")}\""));
+
+				thread4.Start();
+
+				thread1.Join();
+				thread2.Join();
+				thread3.Join();
+				thread4.Join();
 
 			}
 
@@ -90,17 +102,26 @@ namespace MusicBot
 
 				var builder = new StringBuilder();
 
-				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link}\"");
+				var thread1 = new Thread(() => AddSong($"-f bestaudio -g -x ytsearch:\"{link}\""));
 
-				_serverProperties[Context.Guild.Id].Queue.Add(url.StandardOutput.ReadLine());
+				thread1.Start();
 
-				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail ytsearch:\"{link}\"").StandardOutput.ReadLine());
-			    
-			    _serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e ytsearch:\"{link}\"").StandardOutput.ReadLine());
+				var thread2 = new Thread(() => AddThumbnail($"--get-thumbnail ytsearch:\"{link}\""));
 
-				builder.Append("https://www.youtube.com/watch?v=").Append(GetStreamUrl($"--get-id ytsearch:\"{link}\"").StandardOutput.ReadLine());
+				thread2.Start();
 
-				_serverProperties[Context.Guild.Id].QueueURLs.Add(builder.ToString());
+				var thread3 = new Thread(() => AddURL($"--get-id ytsearch:\"{link}\"", true));
+
+				thread3.Start();
+
+				var thread4 = new Thread(() => AddName($"-e ytsearch:\"{link}\""));
+
+				thread4.Start();
+
+				thread1.Join();
+				thread2.Join();
+				thread3.Join();
+				thread4.Join();
 
 			}
 
@@ -363,8 +384,12 @@ namespace MusicBot
             _serverProperties[guild.Id].Queue.Clear();
 
             _serverProperties[guild.Id].QueueNames.Clear();
-            
-            _serverProperties[guild.Id].ConnectedChannel = null;
+
+			_serverProperties[guild.Id].QueueThumbnails.Clear();
+
+			_serverProperties[guild.Id].QueueURLs.Clear();
+
+			_serverProperties[guild.Id].ConnectedChannel = null;
             
             await Context.Channel.SendMessageAsync("Leaving voice.");
 
@@ -390,8 +415,50 @@ namespace MusicBot
 			return builder.Build();
 
 		}
-        
-        #endregion
-        
-    }           
+
+		private void AddSong(string args)
+		{
+
+			_serverProperties[Context.Guild.Id].Queue.Add(GetStreamUrl(args).StandardOutput.ReadLine());
+
+		}
+
+		private void AddThumbnail(string args)
+		{
+
+			_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl(args).StandardOutput.ReadLine());
+
+		}
+
+		private void AddURL(string args, bool build)
+		{
+
+			if(build)
+			{
+
+				var builder = new StringBuilder();
+
+				builder.Append("https://www.youtube.com/watch?v=").Append(GetStreamUrl(args).StandardOutput.ReadLine());
+
+				_serverProperties[Context.Guild.Id].QueueURLs.Add(builder.ToString());
+
+			}
+			else
+			{
+
+				_serverProperties[Context.Guild.Id].QueueURLs.Add(args);
+
+			}
+		}
+
+		private void AddName(string args)
+		{
+
+			_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl(args).StandardOutput.ReadLine());
+
+		}
+
+		#endregion
+
+	}           
 }
