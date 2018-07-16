@@ -55,6 +55,8 @@ namespace MusicBot
 
 				url = GetStreamUrl($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
 
+				_serverProperties[Context.Guild.Id].Queue.Add(url.StandardOutput.ReadLine());
+
 				_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
 
 			}
@@ -63,6 +65,8 @@ namespace MusicBot
 			{
 
 				url = GetStreamUrl($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
+
+				_serverProperties[Context.Guild.Id].Queue.Add(url.StandardOutput.ReadLine());
 
 				_serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
 
@@ -75,25 +79,50 @@ namespace MusicBot
 			else
 			{
 
-				await Context.Channel.SendMessageAsync($"Searching for request by {Context.Message.Author.Username}: {link}");
-	
-				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail ytsearch:\"{link}\"").StandardOutput.ReadLine());
+				await Context.Channel.SendMessageAsync("", false, new EmbedBuilder
+				{
+
+					Title = $"Searching for: {link}",
+
+					Color = Color.Green
+
+				}.Build());
+
+				var builder = new StringBuilder();
 
 				url = GetStreamUrl($"-f bestaudio -g -x ytsearch:\"{link}\"");
+
+				_serverProperties[Context.Guild.Id].Queue.Add(url.StandardOutput.ReadLine());
+
+				_serverProperties[Context.Guild.Id].QueueThumbnails.Add(GetStreamUrl($"--get-thumbnail ytsearch:\"{link}\"").StandardOutput.ReadLine());
 			    
 			    _serverProperties[Context.Guild.Id].QueueNames.Add(GetStreamUrl($"-e ytsearch:\"{link}\"").StandardOutput.ReadLine());
 
-				_serverProperties[Context.Guild.Id].QueueURLs.Add("https://www.youtube.com/watch?v=" + GetStreamUrl($"--get-id ytsearch:\"{link}\"").StandardOutput.ReadLine());
+				builder.Append("https://www.youtube.com/watch?v=").Append(GetStreamUrl($"--get-id ytsearch:\"{link}\"").StandardOutput.ReadLine());
 
-			}   
+				_serverProperties[Context.Guild.Id].QueueURLs.Add(builder.ToString());
 
-            string streamUrl = url.StandardOutput.ReadLine();
-            
-            _serverProperties[Context.Guild.Id].Queue.Add(streamUrl);
+			}
 
-            await PlayQueue(Context.Guild);
+			if (_serverProperties[Context.Guild.Id].Playing)
+				await Context.Channel.SendMessageAsync("", false, new EmbedBuilder
+				{
 
-        }
+					Title = "Added to queue",
+
+					Color = Color.LighterGrey,
+
+					Description = _serverProperties[Context.Guild.Id].QueueURLs[_serverProperties[Context.Guild.Id].QueueURLs.Count - 1],
+
+					ThumbnailUrl = _serverProperties[Context.Guild.Id].QueueThumbnails[_serverProperties[Context.Guild.Id].QueueThumbnails.Count - 1],
+
+					Footer = new EmbedFooterBuilder { Text = $"Added by {Context.Message.Author.Username}" }
+
+					}.Build());
+
+			await PlayQueue(Context.Guild);
+
+		}
 
 	    [Command("playlocal", RunMode = RunMode.Async)]
 	    public async Task PlayLocal([Remainder]string link)
@@ -192,14 +221,16 @@ namespace MusicBot
 
 		    string queue = string.Empty;
 
+			var builder = new StringBuilder();
+
 			foreach (var name in _serverProperties[Context.Guild.Id].QueueNames)
 			{
 
-				queue += name + "\n";
+				builder.Append(name + "\n");
 
 			}
 			
-			await Context.Channel.SendMessageAsync(queue);
+			await Context.Channel.SendMessageAsync(builder.ToString());
 
 		}
         #endregion
@@ -290,16 +321,14 @@ namespace MusicBot
 
             if (_serverProperties[guild.Id].Playing == false)
             {
-                
-                Console.WriteLine("Playing");
-
-				await Context.Channel.SendMessageAsync("",false, CreateEmbed(_serverProperties[guild.Id].QueueNames[0], _serverProperties[guild.Id].QueueThumbnails[0], _serverProperties[guild.Id].QueueURLs[0]));
 
                 _serverProperties[guild.Id].Playing = true;
-                
-                await SendAsync(_serverProperties[guild.Id].ConnectedChannel , _serverProperties[guild.Id].Queue[0]);              
 
-            }    
+				await Context.Channel.SendMessageAsync("", false, CreateEmbed(_serverProperties[Context.Guild.Id].QueueNames[0], _serverProperties[Context.Guild.Id].QueueThumbnails[0], _serverProperties[Context.Guild.Id].QueueURLs[0]));
+
+				await SendAsync(_serverProperties[guild.Id].ConnectedChannel , _serverProperties[guild.Id].Queue[0]);     				
+
+			}    
         }
 
         private void StreamEnded(object sender, EventArgs e)
@@ -322,7 +351,7 @@ namespace MusicBot
 
             PlayQueue(Context.Guild);
 
-        }
+		}
         
         private async Task Leave(IGuild guild)
         {
