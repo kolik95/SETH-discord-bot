@@ -1,12 +1,10 @@
-﻿using System;
+﻿using Discord.Audio;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using Discord.Audio;
 
 namespace MusicBot
 {
-    public class ServerProperties
+	public class ServerProperties
     {
         
         public List<string> Queue { get; }
