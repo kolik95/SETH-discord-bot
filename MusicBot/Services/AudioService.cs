@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Management;
 
 namespace MusicBot
 {
@@ -127,12 +128,13 @@ namespace MusicBot
 
 				_serverProperties[guild.Id].Playing = true;
 
-				await _messageService.PlayingMessage(
-					channel,
-					Color.Blue,
-					_serverProperties[guild.Id].QueueNames[0],
-					_serverProperties[guild.Id].QueueURLs[0],
-					_serverProperties[guild.Id].QueueThumbnails[0]);
+				if(!_serverProperties[guild.Id].Repeat)
+					await _messageService.PlayingMessage(
+						channel,
+						Color.Blue,
+						_serverProperties[guild.Id].QueueNames[0],
+						_serverProperties[guild.Id].QueueURLs[0],
+						_serverProperties[guild.Id].QueueThumbnails[0]);
 
 				await SendAudioAsync(
 					_serverProperties[guild.Id].ConnectedChannel,
@@ -189,7 +191,7 @@ namespace MusicBot
 
 				_serverProperties[guild.Id].Repeat = false;
 
-				_serverProperties[guild.Id].Player.Kill();
+				KillProcessAndChildren(_serverProperties[guild.Id].Player.Id);
 
 				await channel.SendMessageAsync("Skipped");
 
@@ -299,6 +301,35 @@ namespace MusicBot
 
 		}
 
+		private void KillProcessAndChildren(int pid)
+		{
+
+			if (pid == 0) return;
+
+			ManagementObjectSearcher searcher = new ManagementObjectSearcher
+			("Select * From Win32_Process Where ParentProcessID=" + pid);
+
+			ManagementObjectCollection moc = searcher.Get();
+
+			foreach (ManagementObject mo in moc)
+			{
+
+				KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
+
+			}
+
+			try
+			{
+
+				Process proc = Process.GetProcessById(pid);
+
+				proc.Kill();
+
+			}
+
+			catch (ArgumentException) { }
+		}
+
 		#region QueueUtilities
 
 		private void AddSong(string args, IGuild guild)
@@ -353,6 +384,8 @@ namespace MusicBot
 			_serverProperties[guild.Id].QueueThumbnails.Clear();
 
 			_serverProperties[guild.Id].QueueURLs.Clear();
+
+			_serverProperties[guild.Id].Repeat = false;
 
 			_serverProperties[guild.Id].ConnectedChannel = null;
 
