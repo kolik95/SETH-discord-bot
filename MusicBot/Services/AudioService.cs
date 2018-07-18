@@ -191,7 +191,7 @@ namespace MusicBot
 
 				_serverProperties[guild.Id].Repeat = false;
 
-				KillProcessAndChildren(_serverProperties[guild.Id].Player.Id);
+				KillProcess(_serverProperties[guild.Id].Player.Id);
 
 				await channel.SendMessageAsync("Skipped");
 
@@ -301,33 +301,22 @@ namespace MusicBot
 
 		}
 
-		private void KillProcessAndChildren(int pid)
+		private void KillProcess(int PID)
 		{
+			Process killFfmpeg = new Process();
 
-			if (pid == 0) return;
-
-			ManagementObjectSearcher searcher = new ManagementObjectSearcher
-			("Select * From Win32_Process Where ParentProcessID=" + pid);
-
-			ManagementObjectCollection moc = searcher.Get();
-
-			foreach (ManagementObject mo in moc)
+			ProcessStartInfo taskkillStartInfo = new ProcessStartInfo
 			{
+				FileName = "taskkill",
+				Arguments = "/PID " + Convert.ToString(PID) + " /T /F",
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
 
-				KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
+			killFfmpeg.StartInfo = taskkillStartInfo;
 
-			}
+			killFfmpeg.Start();
 
-			try
-			{
-
-				Process proc = Process.GetProcessById(pid);
-
-				proc.Kill();
-
-			}
-
-			catch (ArgumentException) { }
 		}
 
 		#region QueueUtilities
