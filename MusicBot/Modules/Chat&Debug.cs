@@ -19,7 +19,7 @@ namespace MusicBot
         public async Task A()
         {
             
-            await Context.Channel.SendMessageAsync("Test");
+            await Context.Channel.SendMessageAsync("čekám na signál");
             
         }
         

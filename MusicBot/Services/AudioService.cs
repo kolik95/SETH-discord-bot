@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Management;
 
 namespace MusicBot
 {
@@ -111,6 +110,8 @@ namespace MusicBot
 
 		public async Task PlayQueue(IGuild guild, IMessageChannel channel)
 		{
+
+			Thread.Sleep(3000);
 
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
@@ -235,6 +236,8 @@ namespace MusicBot
 		private async Task SendAudioAsync(IAudioClient client, string path, IGuild guild, IMessageChannel channel)
 		{
 
+			Console.WriteLine("Playing");
+
 			var ffmpeg = CreateStream(path);
 
 			_serverProperties[guild.Id].Player = ffmpeg;
@@ -271,7 +274,7 @@ namespace MusicBot
 
 			}
 
-			PlayQueue(guild, channel);
+			new Thread(() => PlayQueue(guild, channel)).Start();
 
 		}
 
@@ -393,6 +396,7 @@ namespace MusicBot
 				UseShellExecute = false,
 				RedirectStandardOutput = true
 			};
+
 			return Process.Start(ffmpeg);
 		}
 

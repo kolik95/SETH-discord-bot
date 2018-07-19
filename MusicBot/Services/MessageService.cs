@@ -36,6 +36,8 @@ namespace MusicBot
 
 				Footer = new EmbedFooterBuilder { Text = $"Added by {username}" }
 
+				
+
 			}.Build());
 
 		}

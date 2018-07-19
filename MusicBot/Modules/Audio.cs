@@ -1,5 +1,6 @@
 ﻿using Discord.Commands;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MusicBot
@@ -32,7 +33,7 @@ namespace MusicBot
 
 			_audioService.CheckActivity(Context.Guild, Context.Channel, Context.Message.Author.Username);
 
-			await _audioService.PlayQueue(Context.Guild, Context.Channel);
+			new Thread(() => _audioService.PlayQueue(Context.Guild, Context.Channel)).Start();
 
 		}
 	    
