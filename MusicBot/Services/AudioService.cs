@@ -111,8 +111,6 @@ namespace MusicBot
 		public async Task PlayQueue(IGuild guild, IMessageChannel channel)
 		{
 
-			Thread.Sleep(3000);
-
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
 			if (_serverProperties[guild.Id].Queue.Count == 0)
@@ -236,8 +234,6 @@ namespace MusicBot
 		private async Task SendAudioAsync(IAudioClient client, string path, IGuild guild, IMessageChannel channel)
 		{
 
-			Console.WriteLine("Playing");
-
 			var ffmpeg = CreateStream(path);
 
 			_serverProperties[guild.Id].Player = ffmpeg;
@@ -274,7 +270,7 @@ namespace MusicBot
 
 			}
 
-			new Thread(() => PlayQueue(guild, channel)).Start();
+			new Thread(() => PlayAfterSkip(guild, channel)).Start();
 
 		}
 
@@ -304,23 +300,14 @@ namespace MusicBot
 
 		}
 
-		private void KillProcess(int PID)
+		private async Task PlayAfterSkip(IGuild guild, IMessageChannel channel)
 		{
-			Process killFfmpeg = new Process();
 
-			ProcessStartInfo taskkillStartInfo = new ProcessStartInfo
-			{
-				FileName = "taskkill",
-				Arguments = "/PID " + Convert.ToString(PID) + " /T /F",
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
+			Thread.Sleep(3000);
 
-			killFfmpeg.StartInfo = taskkillStartInfo;
+			PlayQueue(guild, channel);
 
-			killFfmpeg.Start();
-
-		}
+		}		
 
 		#region QueueUtilities
 
@@ -410,6 +397,24 @@ namespace MusicBot
 				RedirectStandardOutput = true
 			};
 			return Process.Start(yt);
+		}
+
+		private void KillProcess(int PID)
+		{
+			Process killFfmpeg = new Process();
+
+			ProcessStartInfo taskkillStartInfo = new ProcessStartInfo
+			{
+				FileName = "taskkill",
+				Arguments = "/PID " + Convert.ToString(PID) + " /T /F",
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+
+			killFfmpeg.StartInfo = taskkillStartInfo;
+
+			killFfmpeg.Start();
+
 		}
 
 		#endregion

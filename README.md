@@ -1,3 +1,3 @@
-# SAD AND LONELY DISCORD BOT
+# SETH THE DISCORD BOT
 
 Discord bot writen in C# (.NET Core 2), used for playing music and stuff

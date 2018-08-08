@@ -21,7 +21,7 @@ namespace MusicBot
 		}
 
 		[Command("play", RunMode = RunMode.Async)]
-		public async Task JoinChannel([Remainder]string link)
+		public async Task Play([Remainder]string link)
 		{
 
 			var _audioclient = _audioService.CheckForActiveChannel(Context.Guild);
@@ -33,11 +33,23 @@ namespace MusicBot
 
 			_audioService.CheckActivity(Context.Guild, Context.Channel, Context.Message.Author.Username);
 
-			new Thread(() => _audioService.PlayQueue(Context.Guild, Context.Channel)).Start();
+			_audioService.PlayQueue(Context.Guild, Context.Channel);
 
 		}
-	    
-        [Command("leave", RunMode = RunMode.Async)]
+
+		[Command("join", RunMode = RunMode.Async)]
+		public async Task Join()
+		{
+
+			var _audioclient = _audioService.CheckForActiveChannel(Context.Guild);
+
+			if (_audioclient == null)
+				_audioclient = await _audioService.Join(Context.Guild, Context.Message, Context.Channel);
+
+		}
+
+
+		[Command("leave", RunMode = RunMode.Async)]
         public async Task LeaveChannel()
         {
 
