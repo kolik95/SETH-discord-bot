@@ -8,9 +8,9 @@ namespace MusicBot
 	public class Commands : ModuleBase<SocketCommandContext>
     {        
 
-		private AudioService _audioService;
+		private AudioService _audioService { get; set; }
 
-		private MessageService _messageService;
+		private MessageService _messageService { get; set; }
 
 		private Commands()
 		{
@@ -80,5 +80,24 @@ namespace MusicBot
 			await _audioService.SendQueue(Context.Guild, Context.Channel);
 
 		}
+
+		[Command("clearq", RunMode = RunMode.Async)]
+		public async Task Clearq()
+		{
+
+			await _audioService.ClearQueueAsync(Context.Guild);
+
+		}
+
+		[Command("removeat", RunMode = RunMode.Async)]
+		public async Task Remove([Remainder]string item)
+		{
+
+			if (!int.TryParse(item, out int number)) return;
+
+			await _audioService.RemoveAt(Context.Guild, number);
+
+		}
+
 	}           
 }

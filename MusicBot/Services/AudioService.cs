@@ -15,7 +15,7 @@ namespace MusicBot
 		private static readonly ConcurrentDictionary<ulong, ServerProperties> _serverProperties =
 			new ConcurrentDictionary<ulong, ServerProperties>();
 
-		private MessageService _messageService;
+		private MessageService _messageService { get; set; }
 
 		public AudioService()
 		{
@@ -23,6 +23,8 @@ namespace MusicBot
 			_messageService = new MessageService();
 
 		}
+
+		#region Public Methods
 
 		public IAudioClient CheckForActiveChannel(IGuild guild)
 		{
@@ -113,15 +115,6 @@ namespace MusicBot
 
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
-			if (_serverProperties[guild.Id].Queue.Count == 0)
-			{
-
-				await Leave(guild);
-
-				return;
-
-			}
-
 			if (_serverProperties[guild.Id].Playing == false)
 			{
 
@@ -142,6 +135,16 @@ namespace MusicBot
 					channel);
 
 			}
+		}
+
+		public async Task ClearQueueAsync(IGuild guild)
+		{
+
+			_serverProperties[guild.Id].Queue.Clear();
+			_serverProperties[guild.Id].QueueNames.Clear();
+			_serverProperties[guild.Id].QueueURLs.Clear();
+			_serverProperties[guild.Id].QueueThumbnails.Clear();
+
 		}
 
 		public async Task Leave(IGuild guild)
@@ -252,21 +255,35 @@ namespace MusicBot
 
 		}
 
+		public async Task RemoveAt(IGuild guild, int item)
+		{
+
+			RemoveQueueItem(guild, item);
+
+		}
+
+		#endregion
+
+		#region Private Methods
+
 		private void StreamEnded(object sender, EventArgs e, IGuild guild, IMessageChannel channel)
 		{
 
 			_serverProperties[guild.Id].Playing = false;
 
+			if (_serverProperties[guild.Id].Queue.Count == 0)
+			{
+
+				Leave(guild);
+
+				return;
+
+			}
+
 			if (!_serverProperties[guild.Id].Repeat)
 			{
 
-				_serverProperties[guild.Id].Queue.RemoveAt(0);
-
-				_serverProperties[guild.Id].QueueNames.RemoveAt(0);
-
-				_serverProperties[guild.Id].QueueThumbnails.RemoveAt(0);
-
-				_serverProperties[guild.Id].QueueURLs.RemoveAt(0);
+				RemoveQueueItem(guild ,0);
 
 			}
 
@@ -370,6 +387,19 @@ namespace MusicBot
 
 		}
 
+		private void RemoveQueueItem(IGuild guild, int item)
+		{
+
+			_serverProperties[guild.Id].Queue.RemoveAt(item);
+
+			_serverProperties[guild.Id].QueueNames.RemoveAt(item);
+
+			_serverProperties[guild.Id].QueueThumbnails.RemoveAt(item);
+
+			_serverProperties[guild.Id].QueueURLs.RemoveAt(item);
+
+		}
+
 		#endregion
 
 		#region Processes
@@ -418,5 +448,8 @@ namespace MusicBot
 		}
 
 		#endregion
+
+		#endregion
+
 	}
 }
