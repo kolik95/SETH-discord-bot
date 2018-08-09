@@ -115,6 +115,15 @@ namespace MusicBot
 
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
+			if (_serverProperties[guild.Id].Queue.Count == 0)
+			{
+
+				Leave(guild);
+
+				return;
+
+			}
+
 			if (_serverProperties[guild.Id].Playing == false)
 			{
 
@@ -144,6 +153,8 @@ namespace MusicBot
 			_serverProperties[guild.Id].QueueNames.Clear();
 			_serverProperties[guild.Id].QueueURLs.Clear();
 			_serverProperties[guild.Id].QueueThumbnails.Clear();
+
+			_serverProperties[guild.Id].Queue.Add("DummyItem123");
 
 		}
 
