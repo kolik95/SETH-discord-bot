@@ -2,6 +2,7 @@
 using Discord.Audio;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -215,16 +216,22 @@ namespace MusicBot
 		public async Task SendQueue(IGuild guild, IMessageChannel channel)
 		{
 
-			var builder = new StringBuilder();
+			List<EmbedFieldBuilder> fields = new List<EmbedFieldBuilder>();
 
-			foreach (var name in _serverProperties[guild.Id].QueueNames)
+			for (int i = 1; i < _serverProperties[guild.Id].QueueNames.Count; i++)
 			{
+				
+				fields.Add(new EmbedFieldBuilder {
 
-				builder.Append(name + "\n");
+					Name = $"{i}.{_serverProperties[guild.Id].QueueNames[i]}",
+
+					Value = _serverProperties[guild.Id].QueueURLs[i]
+
+					});
 
 			}
 
-			await channel.SendMessageAsync(builder.ToString());
+			await _messageService.QueueMessage(channel, fields);
 
 		}
 
@@ -281,15 +288,6 @@ namespace MusicBot
 		{
 
 			_serverProperties[guild.Id].Playing = false;
-
-			if (_serverProperties[guild.Id].Queue.Count == 0)
-			{
-
-				Leave(guild);
-
-				return;
-
-			}
 
 			if (!_serverProperties[guild.Id].Repeat)
 			{

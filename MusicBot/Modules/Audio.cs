@@ -99,5 +99,13 @@ namespace MusicBot
 
 		}
 
+		[Command("help", RunMode = RunMode.Async)]
+		public async Task Help()
+		{
+
+			await _messageService.HelpMessage(Context.Channel);
+
+		}
+
 	}           
 }

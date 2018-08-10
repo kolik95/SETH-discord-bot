@@ -1,4 +1,5 @@
 ﻿using Discord;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MusicBot
@@ -59,5 +60,59 @@ namespace MusicBot
 			}.Build());
 
 		}
-    }
+
+		public async Task HelpMessage(IMessageChannel channel)
+		{
+
+			await channel.SendMessageAsync("Hey, my name is SETH. Here is a list of my commands:", false, new EmbedBuilder
+			{
+
+				Color = Color.Red,
+
+				Fields = new List<EmbedFieldBuilder>
+				{
+
+					new EmbedFieldBuilder{ Name = "1.help", Value = "Gives you some help."},
+
+					new EmbedFieldBuilder{ Name = "2.join", Value = "Joins your voice channel."},
+
+					new EmbedFieldBuilder{ Name = "3.play + link/name of the song", Value = "Plays a song."},
+
+					new EmbedFieldBuilder{ Name = "4.leave", Value = "Disconnects from a voice channel."},
+
+					new EmbedFieldBuilder{ Name = "5.repeat", Value = "Makes the current song play in a loop."},
+
+					new EmbedFieldBuilder{ Name = "6.skip", Value = "Skips the current song playing."},
+
+					new EmbedFieldBuilder{ Name = "7.queue", Value = "Displays the current queue."},
+
+					new EmbedFieldBuilder{ Name = "8.clearq", Value = "Clears the queue."},
+
+					new EmbedFieldBuilder{ Name = "9.removeat + the songs position in queue", Value = "Removes the selected song from queue."},
+
+					new EmbedFieldBuilder{ Name = "Prefix", Value = Config.Bot.Prefix},
+
+				}
+
+			}.Build());
+
+		}
+
+		public async Task QueueMessage(IMessageChannel channel, List<EmbedFieldBuilder> list)
+		{
+
+			await channel.SendMessageAsync("", false, new EmbedBuilder
+			{
+
+				Title = "Queue",
+
+				Color = Color.DarkRed,
+
+				Fields = list
+
+			}.Build());
+
+		}
+
+	}
 }
