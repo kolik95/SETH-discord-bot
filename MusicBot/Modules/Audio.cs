@@ -98,14 +98,5 @@ namespace MusicBot
 			await _audioService.RemoveAt(Context.Guild, number);
 
 		}
-
-		[Command("help", RunMode = RunMode.Async)]
-		public async Task Help()
-		{
-
-			await _messageService.HelpMessage(Context.Channel);
-
-		}
-
 	}           
 }

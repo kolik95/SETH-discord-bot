@@ -15,12 +15,29 @@ namespace MusicBot
     public class ChatDebug : ModuleBase<SocketCommandContext>
     {
         
+        private MessageService _messageService { get; set; }
+
+        private ChatDebug()
+        {
+
+            _messageService = new MessageService();
+
+        }
+        
         [Command("Test")]
         public async Task A()
         {
             
             await Context.Channel.SendMessageAsync("čekám na signál");
             
+        }
+        
+        [Command("help", RunMode = RunMode.Async)]
+        public async Task Help()
+        {
+
+            await _messageService.HelpMessage(Context.Channel);
+
         }
         
     }

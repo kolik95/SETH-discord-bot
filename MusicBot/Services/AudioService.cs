@@ -84,6 +84,17 @@ namespace MusicBot
 
 			}
 
+			/* else if (link.Contains("&link") && link.Contains("youtube.com"))
+			{
+
+				Process yt = StartYoutubeDL($"youtube - dl.exe - i - g--yes - playlist {link}");
+
+				string output = yt.StandardOutput.ReadLine();
+
+				Console.WriteLine(output);
+
+			} */
+
 			else if (link.Contains("youtube.com"))
 			{
 
@@ -205,7 +216,7 @@ namespace MusicBot
 
 				_serverProperties[guild.Id].Repeat = false;
 
-				KillProcess(_serverProperties[guild.Id].Player.Id);
+				_serverProperties[guild.Id].Player.Kill();
 
 				await channel.SendMessageAsync("Skipped");
 
@@ -417,7 +428,7 @@ namespace MusicBot
 		{
 			var ffmpeg = new ProcessStartInfo
 			{
-				FileName = "ffmpeg.exe",
+				FileName = OS.ffmpegProcess,
 				Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
 				UseShellExecute = false,
 				RedirectStandardOutput = true
@@ -430,30 +441,12 @@ namespace MusicBot
 		{
 			var yt = new ProcessStartInfo
 			{
-				FileName = "youtube-dl.exe",
+				FileName = OS.youtubeDlProcess,
 				Arguments = arguments,
 				UseShellExecute = false,
 				RedirectStandardOutput = true
 			};
 			return Process.Start(yt);
-		}
-
-		private void KillProcess(int PID)
-		{
-			Process killFfmpeg = new Process();
-
-			ProcessStartInfo taskkillStartInfo = new ProcessStartInfo
-			{
-				FileName = "taskkill",
-				Arguments = "/PID " + Convert.ToString(PID) + " /T /F",
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-
-			killFfmpeg.StartInfo = taskkillStartInfo;
-
-			killFfmpeg.Start();
-
 		}
 
 		#endregion

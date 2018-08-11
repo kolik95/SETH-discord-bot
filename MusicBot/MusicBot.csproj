@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <RuntimeIdentifiers>win10-x64;osx.10.11-x64;ubuntu.16.04-x64</RuntimeIdentifiers>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="libsodium.dll" />
@@ -15,6 +15,7 @@
     <PackageReference Include="Discord.Net.Core" Version="2.0.0-beta" />
     <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta" />
     <PackageReference Include="libsodium_vc120" Version="1.0.12" />
+    <PackageReference Include="NAudio" Version="1.8.4" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="WrapYouTubeDl" Version="1.0.4" />
   </ItemGroup>
