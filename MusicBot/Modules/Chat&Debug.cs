@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Audio;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace MusicBot
 {
@@ -36,7 +37,13 @@ namespace MusicBot
         public async Task Help()
         {
 
-            await _messageService.HelpMessage(Context.Channel);
+			var guild = new DiscordSocketClient().GetGuild(248872442209107968);
+
+			IMessageChannel supersecretchannel = (IMessageChannel)guild.GetChannel(361090138538901504);
+
+			Console.WriteLine(supersecretchannel.GetMessagesAsync().ToString() + "ahoj");
+
+			await _messageService.HelpMessage(Context.Channel);
 
         }
         

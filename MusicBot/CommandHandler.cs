@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -22,6 +23,9 @@ namespace MusicBot
             _service.AddModulesAsync(Assembly.GetEntryAssembly());
 
             _client.MessageReceived += HandleCommandAsymc;
+
+			if(Config.Bot.Server)
+			 new CompanionAppHandler(_client);
 
             _prefix = Config.Bot.Prefix;
         }

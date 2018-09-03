@@ -45,5 +45,8 @@ namespace MusicBot
         public string Token;
 
         public string Prefix;
-    }
+
+		public bool Server;
+
+	}
 }

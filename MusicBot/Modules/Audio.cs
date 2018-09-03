@@ -1,39 +1,26 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MusicBot
 {
-	public class Commands : ModuleBase<SocketCommandContext>
+	public class Audio : ModuleBase<SocketCommandContext>
     {        
 
 		private AudioService _audioService { get; set; }
 
 		private MessageService _messageService { get; set; }
 
-		private Commands()
+		private AudioBridge _audioBridge { get; set; }
+
+		public Audio()
 		{
 
 			_audioService = new AudioService();
 			_messageService = new MessageService();
-
-		}
-
-		[Command("play", RunMode = RunMode.Async)]
-		public async Task Play([Remainder]string link)
-		{
-
-			var _audioclient = _audioService.CheckForActiveChannel(Context.Guild);
-
-			if (_audioclient == null)
-				_audioclient = await _audioService.Join(Context.Guild, Context.Message, Context.Channel);
-
-			_audioService.AddToQueue(link, Context.Guild, Context.Channel).Wait();
-
-			_audioService.CheckActivity(Context.Guild, Context.Channel, Context.Message.Author.Username);
-
-			_audioService.PlayQueue(Context.Guild, Context.Channel);
+			_audioBridge = new AudioBridge();
 
 		}
 
@@ -44,7 +31,15 @@ namespace MusicBot
 			var _audioclient = _audioService.CheckForActiveChannel(Context.Guild);
 
 			if (_audioclient == null)
-				_audioclient = await _audioService.Join(Context.Guild, Context.Message, Context.Channel);
+				_audioclient = await _audioService.Join(Context.Guild, ((IVoiceState)Context.User).VoiceChannel, Context.Channel);
+
+		}
+
+		[Command("play", RunMode = RunMode.Async)]
+		public async Task Play([Remainder]string link)
+		{
+
+			await _audioBridge.Play(link, ((IVoiceState)Context.User).VoiceChannel, Context.Guild, Context.Channel, Context.User.Username);
 
 		}
 

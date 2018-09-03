@@ -56,9 +56,9 @@ namespace MusicBot
 
 		}
 
-		public async Task<IAudioClient> Join(IGuild guild, IMessage message, IMessageChannel channel)
+		public async Task<IAudioClient> Join(IGuild guild, IVoiceChannel voice, IMessageChannel channel)
 		{
-			var target = ((IVoiceState)message.Author).VoiceChannel;
+			var target = voice;
 
 			if (target.Guild.Id != guild.Id) return null;
 
@@ -102,7 +102,7 @@ namespace MusicBot
 					$"-f bestaudio -g \"{link.Replace(" ", "")}\"",
 					$"--get-thumbnail \"{link.Replace(" ", "")}\"",
 					link.Replace(" ", "")
-					, $"-e \"{link.Replace(" ", "")}\"", false,
+					, $"-e --encoding UTF-16 \"{link.Replace(" ", "")}\"", false,
 					guild);
 
 			}
@@ -116,7 +116,7 @@ namespace MusicBot
 					$"-f bestaudio -g -x ytsearch:\"{link}\"",
 					$"--get-thumbnail ytsearch:\"{link}\"",
 					$"--get-id ytsearch:\"{link}\"",
-					$"-e ytsearch:\"{link}\"", true,
+					$"-e --encoding UTF-16 ytsearch:\"{link}\"", true,
 					guild);
 
 			}
