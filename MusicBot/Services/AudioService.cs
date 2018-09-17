@@ -10,31 +10,26 @@ using System.Threading.Tasks;
 
 namespace MusicBot
 {
-	class AudioService
-    {
-
+	internal class AudioService
+	{
 		private static readonly ConcurrentDictionary<ulong, ServerProperties> _serverProperties =
 			new ConcurrentDictionary<ulong, ServerProperties>();
 
-		private MessageService _messageService { get; set; }
-
 		public AudioService()
 		{
-
 			_messageService = new MessageService();
-
 		}
+
+		private MessageService _messageService { get; }
 
 		#region Public Methods
 
 		public IAudioClient CheckForActiveChannel(IGuild guild)
 		{
-
 			IAudioClient audioClient;
 
 			if (_serverProperties.ContainsKey(guild.Id))
 			{
-
 				if (_serverProperties[guild.Id].ConnectedChannel != null)
 					audioClient = _serverProperties[guild.Id].ConnectedChannel;
 
@@ -44,16 +39,13 @@ namespace MusicBot
 
 			else
 			{
-
 				_serverProperties.TryAdd(guild.Id,
 					new ServerProperties());
 
 				return null;
-
 			}
 
 			return audioClient;
-
 		}
 
 		public async Task<IAudioClient> Join(IGuild guild, IVoiceChannel voice, IMessageChannel channel)
@@ -67,23 +59,18 @@ namespace MusicBot
 			_serverProperties[guild.Id].ConnectedChannel = audioClient;
 
 			return audioClient;
-
 		}
 
 		public async Task AddToQueue(string link, IGuild guild, IMessageChannel channel)
 		{
-
 			if (link.Contains("soundcloud.com"))
 			{
-
 				//url = StartYoutubeDL($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
 
 				//_serverProperties[guild.Id].Queue.Add(url.StandardOutput.ReadLine());
 
 				//_serverProperties[guild.Id].QueueNames.Add(StartYoutubeDL($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
-
 			}
-
 			/* else if (link.Contains("&link") && link.Contains("youtube.com"))
 			{
 
@@ -97,19 +84,16 @@ namespace MusicBot
 
 			else if (link.Contains("youtube.com"))
 			{
-
 				SearchYoutube(
 					$"-f bestaudio -g \"{link.Replace(" ", "")}\"",
 					$"--get-thumbnail \"{link.Replace(" ", "")}\"",
 					link.Replace(" ", "")
 					, $"-e --encoding UTF-16 \"{link.Replace(" ", "")}\"", false,
 					guild);
-
 			}
 
 			else
 			{
-
 				await _messageService.SearchingMessage(Color.Green, channel, link);
 
 				SearchYoutube(
@@ -118,30 +102,25 @@ namespace MusicBot
 					$"--get-id ytsearch:\"{link}\"",
 					$"-e --encoding UTF-16 ytsearch:\"{link}\"", true,
 					guild);
-
 			}
 		}
 
 		public async Task PlayQueue(IGuild guild, IMessageChannel channel)
 		{
-
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
 			if (_serverProperties[guild.Id].Queue.Count == 0)
 			{
-
 				Leave(guild);
 
 				return;
-
 			}
 
 			if (_serverProperties[guild.Id].Playing == false)
 			{
-
 				_serverProperties[guild.Id].Playing = true;
 
-				if(!_serverProperties[guild.Id].Repeat)
+				if (!_serverProperties[guild.Id].Repeat)
 					await _messageService.PlayingMessage(
 						channel,
 						Color.Blue,
@@ -154,125 +133,96 @@ namespace MusicBot
 					_serverProperties[guild.Id].Queue[0],
 					guild,
 					channel);
-
 			}
 		}
 
 		public async Task ClearQueueAsync(IGuild guild)
 		{
-
 			_serverProperties[guild.Id].Queue.Clear();
 			_serverProperties[guild.Id].QueueNames.Clear();
 			_serverProperties[guild.Id].QueueURLs.Clear();
 			_serverProperties[guild.Id].QueueThumbnails.Clear();
 
 			_serverProperties[guild.Id].Queue.Add("DummyItem123");
-
 		}
 
 		public async Task Leave(IGuild guild)
 		{
-
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
-			IAudioClient client = _serverProperties[guild.Id].ConnectedChannel;
+			var client = _serverProperties[guild.Id].ConnectedChannel;
 
 			ClearProperties(guild);
 
 			_serverProperties[guild.Id].Playing = false;
 
 			await client.StopAsync();
-
 		}
 
 		public async Task SetRepeat(IGuild guild, IMessageChannel channel)
 		{
-
 			if (_serverProperties[guild.Id].Repeat)
 			{
-
 				_serverProperties[guild.Id].Repeat = false;
 
 				await channel.SendMessageAsync("Repeating off");
-
 			}
 
 			else
 			{
-
 				_serverProperties[guild.Id].Repeat = true;
 
 				await channel.SendMessageAsync("Repeating on");
-
 			}
-
 		}
 
 		public async Task Skip(IGuild guild, IMessageChannel channel)
 		{
-
 			if (_serverProperties[guild.Id].Playing)
 			{
-
 				_serverProperties[guild.Id].Repeat = false;
 
 				_serverProperties[guild.Id].Player.Kill();
 
 				await channel.SendMessageAsync("Skipped");
-
 			}
-
 		}
 
 		public async Task SendQueue(IGuild guild, IMessageChannel channel)
 		{
+			var fields = new List<EmbedFieldBuilder>();
 
-			List<EmbedFieldBuilder> fields = new List<EmbedFieldBuilder>();
-
-			for (int i = 1; i < _serverProperties[guild.Id].QueueNames.Count; i++)
-			{
-				
-				fields.Add(new EmbedFieldBuilder {
-
+			for (var i = 1; i < _serverProperties[guild.Id].QueueNames.Count; i++)
+				fields.Add(new EmbedFieldBuilder
+				{
 					Name = $"{i}.{_serverProperties[guild.Id].QueueNames[i]}",
 
 					Value = _serverProperties[guild.Id].QueueURLs[i]
-
-					});
-
-			}
+				});
 
 			await _messageService.QueueMessage(channel, fields);
-
 		}
 
 		public async Task CheckActivity(IGuild guild, IMessageChannel channel, string username)
 		{
-
 			if (_serverProperties[guild.Id].Playing)
-			{
-
 				await _messageService.AddedMessage(
 					channel,
 					Color.LightGrey,
 					_serverProperties[guild.Id].QueueURLs[_serverProperties[guild.Id].QueueURLs.Count - 1]
 					, _serverProperties[guild.Id].QueueThumbnails[_serverProperties[guild.Id].QueueThumbnails.Count - 1],
 					username);
-
-			}
-
 		}
 
 		private async Task SendAudioAsync(IAudioClient client, string path, IGuild guild, IMessageChannel channel)
 		{
-
 			var ffmpeg = CreateStream(path);
 
 			_serverProperties[guild.Id].Player = ffmpeg;
 
 			ffmpeg.EnableRaisingEvents = true;
 
-			ffmpeg.Exited += (sender, e) => StreamEnded(sender, e , guild, channel);
+			ffmpeg.Exited += (sender, e) => StreamEnded(sender, e, guild, channel);
 
 			var output = ffmpeg.StandardOutput.BaseStream;
 
@@ -281,14 +231,11 @@ namespace MusicBot
 			await output.CopyToAsync(discord);
 
 			await discord.FlushAsync();
-
 		}
 
 		public async Task RemoveAt(IGuild guild, int item)
 		{
-
 			RemoveQueueItem(guild, item);
-
 		}
 
 		#endregion
@@ -297,23 +244,15 @@ namespace MusicBot
 
 		private void StreamEnded(object sender, EventArgs e, IGuild guild, IMessageChannel channel)
 		{
-
 			_serverProperties[guild.Id].Playing = false;
 
-			if (!_serverProperties[guild.Id].Repeat)
-			{
-
-				RemoveQueueItem(guild ,0);
-
-			}
+			if (!_serverProperties[guild.Id].Repeat) RemoveQueueItem(guild, 0);
 
 			new Thread(() => PlayAfterSkip(guild, channel)).Start();
-
 		}
 
 		private void SearchYoutube(string args1, string args2, string args3, string args4, bool link, IGuild guild)
 		{
-
 			var thread1 = new Thread(() => AddSong(args1, guild));
 
 			thread1.Start();
@@ -334,65 +273,51 @@ namespace MusicBot
 			thread2.Join();
 			thread3.Join();
 			thread4.Join();
-
 		}
 
 		private async Task PlayAfterSkip(IGuild guild, IMessageChannel channel)
 		{
-
-			Thread.Sleep(3000);
+			Thread.Sleep(2000);
 
 			PlayQueue(guild, channel);
-
-		}		
+		}
 
 		#region QueueUtilities
 
 		private void AddSong(string args, IGuild guild)
 		{
-
 			_serverProperties[guild.Id].Queue.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
-
 		}
 
 		private void AddThumbnail(string args, IGuild guild)
 		{
-
 			_serverProperties[guild.Id].QueueThumbnails.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
-
 		}
 
 		private void AddURL(string args, bool build, IGuild guild)
 		{
-
 			if (build)
 			{
-
 				var builder = new StringBuilder();
 
-				builder.Append("https://www.youtube.com/watch?v=").Append(StartYoutubeDL(args).StandardOutput.ReadLine());
+				builder.Append("https://www.youtube.com/watch?v=")
+					.Append(StartYoutubeDL(args).StandardOutput.ReadLine());
 
 				_serverProperties[guild.Id].QueueURLs.Add(builder.ToString());
-
 			}
 			else
 			{
-
 				_serverProperties[guild.Id].QueueURLs.Add(args);
-
 			}
 		}
 
 		private void AddName(string args, IGuild guild)
 		{
-
 			_serverProperties[guild.Id].QueueNames.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
-
 		}
 
 		private void ClearProperties(IGuild guild)
 		{
-
 			_serverProperties[guild.Id].Queue.Clear();
 
 			_serverProperties[guild.Id].QueueNames.Clear();
@@ -404,12 +329,10 @@ namespace MusicBot
 			_serverProperties[guild.Id].Repeat = false;
 
 			_serverProperties[guild.Id].ConnectedChannel = null;
-
 		}
 
 		private void RemoveQueueItem(IGuild guild, int item)
 		{
-
 			_serverProperties[guild.Id].Queue.RemoveAt(item);
 
 			_serverProperties[guild.Id].QueueNames.RemoveAt(item);
@@ -417,7 +340,6 @@ namespace MusicBot
 			_serverProperties[guild.Id].QueueThumbnails.RemoveAt(item);
 
 			_serverProperties[guild.Id].QueueURLs.RemoveAt(item);
-
 		}
 
 		#endregion
@@ -452,6 +374,5 @@ namespace MusicBot
 		#endregion
 
 		#endregion
-
 	}
 }
