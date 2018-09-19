@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -24,13 +27,38 @@ namespace MusicBot
 		[Command("help", RunMode = RunMode.Async)]
 		public async Task Help()
 		{
-			var guild = new DiscordSocketClient().GetGuild(248872442209107968);
-
-			var supersecretchannel = (IMessageChannel) guild.GetChannel(361090138538901504);
-
-			Console.WriteLine(supersecretchannel.GetMessagesAsync() + "ahoj");
 
 			await _messageService.HelpMessage(Context.Channel);
+
 		}
+
+		[RequireBotPermission(ChannelPermission.ManageMessages)]
+		[RequireUserPermission(ChannelPermission.ManageMessages)]
+		[Command("msgdel", RunMode = RunMode.Async)]
+		public async Task MessageDelete([Remainder] string input)
+		{
+
+			IAsyncEnumerable<IReadOnlyCollection<IMessage>> messages; 
+
+			if (input == "all")
+			{
+
+				messages = Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, Int32.MaxValue);
+
+				new Thread(() => _messageService.DeleteMessages(messages)).Start();
+
+				return;
+
+			}
+
+			if (!int.TryParse(input, out var k))
+				return;
+
+			messages = Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, k);
+
+			new Thread(() => _messageService.DeleteMessages(messages)).Start();
+
+		}
+
 	}
 }

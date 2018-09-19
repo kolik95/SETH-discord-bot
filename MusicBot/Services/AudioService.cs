@@ -63,6 +63,9 @@ namespace MusicBot
 
 		public async Task AddToQueue(string link, IGuild guild, IMessageChannel channel)
 		{
+
+			await channel.TriggerTypingAsync();
+
 			if (link.Contains("soundcloud.com"))
 			{
 				//url = StartYoutubeDL($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
@@ -83,13 +86,13 @@ namespace MusicBot
 			} */
 
 			else if (link.Contains("youtube.com"))
-			{
-				SearchYoutube(
-					$"-f bestaudio -g \"{link.Replace(" ", "")}\"",
-					$"--get-thumbnail \"{link.Replace(" ", "")}\"",
-					link.Replace(" ", "")
-					, $"-e --encoding UTF-16 \"{link.Replace(" ", "")}\"", false,
-					guild);
+				{
+					SearchYoutube(
+						$"-f bestaudio -g \"{link.Replace(" ", "")}\"",
+						$"--get-thumbnail \"{link.Replace(" ", "")}\"",
+						link.Replace(" ", "")
+						, $"-e --encoding UTF-16 \"{link.Replace(" ", "")}\"", false,
+						guild);
 			}
 
 			else

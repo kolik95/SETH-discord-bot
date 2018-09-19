@@ -1,5 +1,8 @@
-﻿using Discord;
+﻿using System;
+using Discord;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MusicBot
@@ -114,5 +117,23 @@ namespace MusicBot
 
 		}
 
+	    public async Task DeleteMessages(IAsyncEnumerable<IReadOnlyCollection<IMessage>> messages)
+	    {
+
+		    var list = messages.ToEnumerable();
+
+		    foreach (var thing in list)
+		    {
+
+			    foreach (var thing2 in thing)
+			    {
+
+				    await thing2.DeleteAsync();
+
+					Thread.Sleep(500);
+
+			    }
+		    }
+	    }
 	}
 }
