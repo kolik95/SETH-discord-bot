@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace MusicBot
 {
-    public static class OS
+    public static class OSConfig
     {
 
         private static bool isWindows =
@@ -13,7 +13,9 @@ namespace MusicBot
 
         public static string youtubeDlProcess;
 
-        static OS()
+        public static ProcessManager ProcessManager;
+
+        static OSConfig()
         {
 
             if (isWindows)
@@ -21,6 +23,7 @@ namespace MusicBot
 
                 ffmpegProcess = "ffmpeg.exe";
                 youtubeDlProcess = "youtube-dl.exe";
+                ProcessManager = new WinProcessManager();
 
             }
 
@@ -29,6 +32,7 @@ namespace MusicBot
 
                 ffmpegProcess = "ffmpeg";
                 youtubeDlProcess = "youtube-dl";
+                ProcessManager = new LinProcessManager();
                
             }               
         }    

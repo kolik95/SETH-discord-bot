@@ -292,7 +292,7 @@ namespace MusicBot
 			if (!_serverProperties[guild.Id].IsSuspended)
 			{
 
-				await Suspend(_serverProperties[guild.Id].Player);
+				await OSConfig.ProcessManager.Suspend(_serverProperties[guild.Id].Player);
 
 				await channel.SendMessageAsync("Paused.");
 
@@ -301,7 +301,7 @@ namespace MusicBot
 			else
 			{
 
-				await Resume(_serverProperties[guild.Id].Player);
+				await OSConfig.ProcessManager.Resume(_serverProperties[guild.Id].Player);
 
 				await channel.SendMessageAsync("Unpaused.");
 
@@ -379,7 +379,7 @@ namespace MusicBot
 		{
 			var ffmpeg = new ProcessStartInfo
 			{
-				FileName = OS.ffmpegProcess,
+				FileName = OSConfig.ffmpegProcess,
 				Arguments = $"-hide_banner -loglevel panic -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
 				UseShellExecute = false,
 				RedirectStandardOutput = true
@@ -392,59 +392,13 @@ namespace MusicBot
 		{
 			var yt = new ProcessStartInfo
 			{
-				FileName = OS.youtubeDlProcess,
+				FileName = OSConfig.youtubeDlProcess,
 				Arguments = arguments,
 				UseShellExecute = false,
 				RedirectStandardOutput = true
 			};
 			return Process.Start(yt);
 		}
-
-		[DllImport("kernel32.dll")]
-		static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
-		[DllImport("kernel32.dll")]
-		static extern uint SuspendThread(IntPtr hThread);
-		[DllImport("kernel32.dll")]
-		static extern int ResumeThread(IntPtr hThread);
-
-		private async Task Suspend(Process process)
-		{
-
-			foreach (ProcessThread thread in process.Threads)
-			{
-
-				var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
-
-				if (pOpenThread == IntPtr.Zero)
-				{
-
-					break;
-
-				}
-
-				SuspendThread(pOpenThread);
-			}
-		}
-
-		private async Task Resume(Process process)
-		{
-
-			foreach (ProcessThread thread in process.Threads)
-			{
-				var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
-
-				if (pOpenThread == IntPtr.Zero)
-				{
-
-					break;
-
-				}
-
-				ResumeThread(pOpenThread);
-			}
-
-		}
-
 	}
 		#endregion
 

@@ -131,7 +131,7 @@ namespace MusicBot
 
 				    await thing2.DeleteAsync();
 
-					Thread.Sleep(3000);
+					Thread.Sleep(1000);
 
 			    }
 			}
