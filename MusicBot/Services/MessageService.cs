@@ -81,7 +81,7 @@ namespace MusicBot
 
 					new EmbedFieldBuilder{ Name = "3.play + link/name of the song", Value = "Plays a song."},
 
-					new EmbedFieldBuilder{ Name = "4.leave", Value = "Disconnects from a voice channel."},
+					new EmbedFieldBuilder{ Name = "4.leave/stop", Value = "Disconnects from a voice channel."},
 
 					new EmbedFieldBuilder{ Name = "5.repeat", Value = "Makes the current song play in a loop."},
 
@@ -92,6 +92,10 @@ namespace MusicBot
 					new EmbedFieldBuilder{ Name = "8.clearq", Value = "Clears the queue."},
 
 					new EmbedFieldBuilder{ Name = "9.removeat + the songs position in queue", Value = "Removes the selected song from queue."},
+
+					new EmbedFieldBuilder{ Name = "10.pause", Value = "Pauses audio."},
+
+					new EmbedFieldBuilder{ Name = "11.msgdel + number of messages (works kinda flimsy atm)", Value = "Removes the selected amount of messages."},
 
 					new EmbedFieldBuilder{ Name = "Prefix", Value = Config.Bot.Prefix},
 
@@ -117,12 +121,9 @@ namespace MusicBot
 
 		}
 
-	    public async Task DeleteMessages(IAsyncEnumerable<IReadOnlyCollection<IMessage>> messages)
+	    public async Task DeleteMessages(IAsyncEnumerable<IReadOnlyCollection<IMessage>> messages, ITextChannel channel)
 	    {
-
-		    var list = messages.ToEnumerable();
-
-		    foreach (var thing in list)
+		    foreach (var thing in messages.ToEnumerable())
 		    {
 
 			    foreach (var thing2 in thing)
@@ -130,10 +131,10 @@ namespace MusicBot
 
 				    await thing2.DeleteAsync();
 
-					Thread.Sleep(500);
+					Thread.Sleep(3000);
 
 			    }
-		    }
+			}
 	    }
 	}
 }

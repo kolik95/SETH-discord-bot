@@ -41,6 +41,13 @@ namespace MusicBot
 
 		}
 
+	    [Command("stop", RunMode = RunMode.Async)]
+	    private async Task Stop()
+	    {
+
+		    await LeaveChannel();
+
+	    }
 
 		[Command("leave", RunMode = RunMode.Async)]
         public async Task LeaveChannel()
@@ -91,5 +98,13 @@ namespace MusicBot
 			await _audioService.RemoveAt(Context.Guild, number);
 
 		}
+
+	    [Command("pause", RunMode = RunMode.Async)]
+		public async Task Pause()
+	    {
+
+		    await _audioService.Pause(Context.Guild, Context.Channel);
+
+	    }
 	}           
 }

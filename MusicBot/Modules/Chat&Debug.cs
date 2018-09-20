@@ -43,9 +43,9 @@ namespace MusicBot
 			if (input == "all")
 			{
 
-				messages = Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, Int32.MaxValue);
+				messages = Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, 100000);
 
-				new Thread(() => _messageService.DeleteMessages(messages)).Start();
+				new Thread(() => _messageService.DeleteMessages(messages, (ITextChannel)Context.Channel)).Start();
 
 				return;
 
@@ -56,7 +56,7 @@ namespace MusicBot
 
 			messages = Context.Channel.GetMessagesAsync(Context.Message, Direction.Before, k);
 
-			new Thread(() => _messageService.DeleteMessages(messages)).Start();
+			new Thread(() => _messageService.DeleteMessages(messages, (ITextChannel)Context.Channel)).Start();
 
 		}
 

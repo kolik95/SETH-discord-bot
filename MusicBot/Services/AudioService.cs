@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -280,9 +281,34 @@ namespace MusicBot
 
 		private async Task PlayAfterSkip(IGuild guild, IMessageChannel channel)
 		{
-			Thread.Sleep(2000);
+			Thread.Sleep(3000);
 
 			PlayQueue(guild, channel);
+		}
+
+		public async Task Pause(IGuild guild, IMessageChannel channel)
+		{
+
+			if (!_serverProperties[guild.Id].IsSuspended)
+			{
+
+				await Suspend(_serverProperties[guild.Id].Player);
+
+				await channel.SendMessageAsync("Paused.");
+
+			}
+
+			else
+			{
+
+				await Resume(_serverProperties[guild.Id].Player);
+
+				await channel.SendMessageAsync("Unpaused.");
+
+			}
+
+			_serverProperties[guild.Id].IsSuspended = !_serverProperties[guild.Id].IsSuspended;
+
 		}
 
 		#region QueueUtilities
@@ -374,8 +400,53 @@ namespace MusicBot
 			return Process.Start(yt);
 		}
 
+		[DllImport("kernel32.dll")]
+		static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+		[DllImport("kernel32.dll")]
+		static extern uint SuspendThread(IntPtr hThread);
+		[DllImport("kernel32.dll")]
+		static extern int ResumeThread(IntPtr hThread);
+
+		private async Task Suspend(Process process)
+		{
+
+			foreach (ProcessThread thread in process.Threads)
+			{
+
+				var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
+
+				if (pOpenThread == IntPtr.Zero)
+				{
+
+					break;
+
+				}
+
+				SuspendThread(pOpenThread);
+			}
+		}
+
+		private async Task Resume(Process process)
+		{
+
+			foreach (ProcessThread thread in process.Threads)
+			{
+				var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
+
+				if (pOpenThread == IntPtr.Zero)
+				{
+
+					break;
+
+				}
+
+				ResumeThread(pOpenThread);
+			}
+
+		}
+
+	}
 		#endregion
 
 		#endregion
-	}
 }

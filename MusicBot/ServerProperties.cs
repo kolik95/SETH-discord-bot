@@ -18,8 +18,10 @@ namespace MusicBot
 		public bool Repeat { get; set; }
 
         public bool Playing { get; set; }
-        
-        public IAudioClient ConnectedChannel { get; set; }
+
+	    public bool IsSuspended { get; set; }
+
+		public IAudioClient ConnectedChannel { get; set; }
 
         public Process Player { get; set; }
 
@@ -31,6 +33,7 @@ namespace MusicBot
 			QueueURLs = new List<string>();
 			Repeat = false;
             Playing = false;
+	        IsSuspended = false;
             ConnectedChannel = null;
             Player = null;
 
