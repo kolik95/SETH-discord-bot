@@ -95,7 +95,7 @@ namespace MusicBot
 
 					new EmbedFieldBuilder{ Name = "10.pause", Value = "Pauses audio."},
 
-					new EmbedFieldBuilder{ Name = "11.msgdel + number of messages (works kinda flimsy atm)", Value = "Removes the selected amount of messages."},
+					new EmbedFieldBuilder{ Name = "11.msgdel + number of messages (works kinda flimsy atm, only for room moderators)", Value = "Removes the selected amount of messages."},
 
 					new EmbedFieldBuilder{ Name = "Prefix", Value = Config.Bot.Prefix},
 
