@@ -5,9 +5,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace MusicBot
 {
@@ -69,12 +71,17 @@ namespace MusicBot
 
 			if (link.Contains("soundcloud.com"))
 			{
-				//url = StartYoutubeDL($"-f bestaudio -g \"{link.Replace(" ", "")}\"");
 
-				//_serverProperties[guild.Id].Queue.Add(url.StandardOutput.ReadLine());
+				AddSong($"-f bestaudio -g \"{link.Replace(" ", "")}\"", guild);
 
-				//_serverProperties[guild.Id].QueueNames.Add(StartYoutubeDL($"-e \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine());
+				_serverProperties[guild.Id].QueueThumbnails.Add("https://pmcvariety.files.wordpress.com/2018/02/soundcloud-logo.jpg?w=814");
+
+				_serverProperties[guild.Id].QueueNames.Add("Soundcloud track");
+
+				_serverProperties[guild.Id].QueueURLs.Add(link.Replace(" ", ""));
+
 			}
+
 			/* else if (link.Contains("&link") && link.Contains("youtube.com"))
 			{
 

@@ -123,13 +123,13 @@ namespace MusicBot
 
 	    public async Task DeleteMessages(IAsyncEnumerable<IReadOnlyCollection<IMessage>> messages, ITextChannel channel)
 	    {
-		    foreach (var thing in messages.ToEnumerable())
+		    foreach (var collection in messages.ToEnumerable())
 		    {
 
-			    foreach (var thing2 in thing)
+			    foreach (var msg in collection)
 			    {
 
-				    await thing2.DeleteAsync();
+				    await msg.DeleteAsync();
 
 					Thread.Sleep(1000);
 
