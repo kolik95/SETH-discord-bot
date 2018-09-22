@@ -3,11 +3,12 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace MusicBot
+namespace MusicBot.ProcessManagers
 {
-    public class WinProcessManager : ProcessManager
+    public class WinProcessManager : IProcessManager
     {
-        
+        #region DLL Import
+
         [DllImport("kernel32.dll")]
         static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
         [DllImport("kernel32.dll")]
@@ -15,7 +16,9 @@ namespace MusicBot
         [DllImport("kernel32.dll")]
         static extern int ResumeThread(IntPtr hThread);
 
-        public override async Task Suspend(Process process)
+        #endregion
+
+        public async Task Suspend(Process process)
         {
 
             foreach (ProcessThread thread in process.Threads)
@@ -34,7 +37,7 @@ namespace MusicBot
             }
         }
 
-        public override async Task Resume(Process process)
+        public async Task Resume(Process process)
         {
 
             foreach (ProcessThread thread in process.Threads)

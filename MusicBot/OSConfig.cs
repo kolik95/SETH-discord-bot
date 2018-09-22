@@ -1,5 +1,6 @@
 ﻿using System.Runtime;
 using System.Runtime.InteropServices;
+using MusicBot.ProcessManagers;
 
 namespace MusicBot
 {
@@ -13,7 +14,7 @@ namespace MusicBot
 
         public static string youtubeDlProcess;
 
-        public static ProcessManager ProcessManager;
+        internal static IProcessManager ProcessManager { get; set; }
 
         static OSConfig()
         {
