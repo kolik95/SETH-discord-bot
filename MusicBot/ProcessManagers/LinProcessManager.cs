@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace MusicBot
+namespace MusicBot.ProcessManagers
 {
-    public class LinProcessManager : ProcessManager
+    public class LinProcessManager : IProcessManager
     {
-        public override async Task Suspend(Process process)
+        public async Task Suspend(Process process)
         {
 
             var id = process.Id;
@@ -24,7 +24,7 @@ namespace MusicBot
             }.Start();
         }
 
-        public override async Task Resume(Process process)
+        public async Task Resume(Process process)
         {
             
             var id = process.Id;
