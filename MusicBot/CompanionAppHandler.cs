@@ -29,7 +29,7 @@ namespace MusicBot
 
 			_server.StringEncoder = Encoding.UTF8;
 
-			_server.DataReceived += DataReceived;
+			_server.DataReceived += DataReceivedAsync;
 
 			_server.ClientConnected += ClientConnected;
 
@@ -37,14 +37,9 @@ namespace MusicBot
 
 		}
 
-		private void DataReceived(object sender, Message e)
-		{
+        private async void DataReceivedAsync(object sender, Message e) => await Play(e);
 
-			Play(e);
-
-		}
-
-		private void ClientConnected(object sender, System.Net.Sockets.TcpClient e)
+        private void ClientConnected(object sender, System.Net.Sockets.TcpClient e)
 		{
 
 			Console.WriteLine("Client connected");

@@ -122,7 +122,7 @@ namespace MusicBot
 
 			if (_serverProperties[guild.Id].Queue.Count == 0)
 			{
-				Leave(guild);
+                await Leave(guild);
 
 				return;
 			}
@@ -244,22 +244,19 @@ namespace MusicBot
 			await discord.FlushAsync();
 		}
 
-		public async Task RemoveAt(IGuild guild, int item)
-		{
-			RemoveQueueItem(guild, item);
-		}
+        public async Task RemoveAt(IGuild guild, int item) => RemoveQueueItem(guild, item);
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Private Methods
 
-		private void StreamEnded(object sender, EventArgs e, IGuild guild, IMessageChannel channel)
+        private void StreamEnded(object sender, EventArgs e, IGuild guild, IMessageChannel channel)
 		{
 			_serverProperties[guild.Id].Playing = false;
 
 			if (!_serverProperties[guild.Id].Repeat) RemoveQueueItem(guild, 0);
 
-			new Thread(() => PlayAfterSkip(guild, channel)).Start();
+			new Thread(async () => await PlayAfterSkip(guild, channel)).Start();
 		}
 
 		private void SearchYoutube(string args1, string args2, string args3, string args4, bool link, IGuild guild)
@@ -290,7 +287,7 @@ namespace MusicBot
 		{
 			Thread.Sleep(3000);
 
-			PlayQueue(guild, channel);
+            await PlayQueue(guild, channel);
 		}
 
 		public async Task Pause(IGuild guild, IMessageChannel channel)
@@ -367,22 +364,22 @@ namespace MusicBot
 			_serverProperties[guild.Id].ConnectedChannel = null;
 		}
 
-		private void RemoveQueueItem(IGuild guild, int item)
-		{
-			_serverProperties[guild.Id].Queue.RemoveAt(item);
+        private void RemoveQueueItem(IGuild guild, int item)
+        {
+            _serverProperties[guild.Id].Queue.RemoveAt(item);
 
-			_serverProperties[guild.Id].QueueNames.RemoveAt(item);
+            _serverProperties[guild.Id].QueueNames.RemoveAt(item);
 
-			_serverProperties[guild.Id].QueueThumbnails.RemoveAt(item);
+            _serverProperties[guild.Id].QueueThumbnails.RemoveAt(item);
 
-			_serverProperties[guild.Id].QueueURLs.RemoveAt(item);
-		}
+            _serverProperties[guild.Id].QueueURLs.RemoveAt(item);
+        }
 
-		#endregion
+        #endregion
 
-		#region Processes
+        #region Processes
 
-		private Process CreateStream(string path)
+        private Process CreateStream(string path)
 		{
 			var ffmpeg = new ProcessStartInfo
 			{
