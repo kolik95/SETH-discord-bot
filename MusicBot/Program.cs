@@ -19,7 +19,22 @@ namespace MusicBot
 
             _client.Log += Log;
 
-            await _client.LoginAsync(TokenType.Bot, Config.Bot.Token);
+	        try
+	        {
+
+		        await _client.LoginAsync(TokenType.Bot, Config.Bot.Token);
+
+			}
+	        catch (Exception e)
+	        {
+
+		        Console.WriteLine("Invalid token");
+
+		        Console.ReadKey();
+
+				Environment.Exit(0);
+
+	        }
 
             await _client.StartAsync();
 

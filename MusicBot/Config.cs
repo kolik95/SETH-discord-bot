@@ -28,14 +28,36 @@ namespace MusicBot
 
                 Console.ReadKey();
 
-                Environment.Exit(1);
+                Environment.Exit(0);
             }
 
             else
-            {
-                var json = File.ReadAllText(configFolder + "/" + configFile);
+			{
+	            try
+	            {
 
-                Bot = JsonConvert.DeserializeObject<BotConfig>(json);
+		            var json = File.ReadAllText(configFolder + "/" + configFile);
+
+					Bot = JsonConvert.DeserializeObject<BotConfig>(json);
+
+				}
+	            catch (Exception e)
+	            {
+
+					Console.WriteLine("Invalid configuration data");
+
+		            Console.ReadKey();
+
+		            Environment.Exit(0);
+
+				}
+
+	            if (Bot.Token != null && Bot.Prefix != null) return;
+	            Console.WriteLine("Please configure the bot using the config file.");
+
+	            Console.ReadKey();
+
+	            Environment.Exit(0);
             }
         }
     }
