@@ -29,7 +29,7 @@ namespace MusicBot
 			if (_audioclient == null)
 				_audioclient = await _audioService.Join(guild, voice, channel);
 
-			_audioService.AddToQueue(link, guild, channel).Wait();
+			_audioService.AddToQueue(link, guild, channel, username).Wait();
 
 			_audioService.CheckActivity(guild, channel, username);
 

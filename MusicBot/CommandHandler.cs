@@ -28,7 +28,8 @@ namespace MusicBot
 			 new CompanionAppHandler(_client);
 
             _prefix = Config.Bot.Prefix;
-        }
+
+		}
 
 
         private async Task HandleCommandAsymc(SocketMessage s)

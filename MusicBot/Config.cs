@@ -24,7 +24,7 @@ namespace MusicBot
 
                 File.WriteAllText(configFolder + "/" + configFile, json);
 
-                Console.WriteLine("Please configure the bot using the config file.");
+                Console.WriteLine("Please configure the bot using the config file. (Do not configure the SpotifyAuthToken!)");
 
                 Console.ReadKey();
 
@@ -53,13 +53,14 @@ namespace MusicBot
 				}
 
 	            if (Bot.Token != null && Bot.Prefix != null) return;
-	            Console.WriteLine("Please configure the bot using the config file.");
+	            Console.WriteLine("Please configure the bot using the config file. (Do not configure the SpotifyAuthToken!)");
 
 	            Console.ReadKey();
 
 	            Environment.Exit(0);
             }
         }
+
     }
 
     public struct BotConfig
@@ -68,7 +69,11 @@ namespace MusicBot
 
         public string Prefix;
 
+	    public string OwnerID;
+
 		public bool Server;
 
-	}
+	    public bool Spotify;
+
+    }
 }

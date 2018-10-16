@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -8,8 +10,11 @@ namespace MusicBot
     public class Program
     {      
         private static async Task Main(string[] args)
-        {                       
-            
+        {
+
+			if(Config.Bot.Spotify)
+				SpotifyClient.GetInstance.InitializeClientAsync();
+
             if (string.IsNullOrEmpty(Config.Bot.Token)) return;
 
             DiscordSocketClient _client = new DiscordSocketClient(new DiscordSocketConfig
@@ -24,7 +29,7 @@ namespace MusicBot
 
 		        await _client.LoginAsync(TokenType.Bot, Config.Bot.Token);
 
-			}
+	        }
 	        catch (Exception e)
 	        {
 
@@ -32,11 +37,11 @@ namespace MusicBot
 
 		        Console.ReadKey();
 
-				Environment.Exit(0);
+		        Environment.Exit(0);
 
 	        }
 
-            await _client.StartAsync();
+	        await _client.StartAsync();
 
             CommandHandler _handler = new CommandHandler(_client);
 

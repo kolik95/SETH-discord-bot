@@ -24,6 +24,22 @@ namespace MusicBot
 
 		}
 
+	    public async Task SelectMessage(IMessageChannel channel, List<EmbedFieldBuilder> fields)
+	    {
+
+		    await channel.SendMessageAsync("", false, new EmbedBuilder
+		    {
+
+				Title = "Which one should i play:",
+
+				Color = Color.Red,
+
+				Fields = fields
+
+		    }.Build());
+
+	    }
+
 		public async Task AddedMessage(IMessageChannel channel, Color color, string description, string thumbnail, string username)
 		{
 
@@ -67,7 +83,7 @@ namespace MusicBot
 		public async Task HelpMessage(IMessageChannel channel)
 		{
 
-			await channel.SendMessageAsync("Hey, my name is SETH. Here is a list of my commands:", false, new EmbedBuilder
+			await channel.SendMessageAsync("Hey, my name is SETH. Here is a fields of my commands:", false, new EmbedBuilder
 			{
 
 				Color = Color.Red,

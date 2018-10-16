@@ -19,7 +19,6 @@ namespace MusicBot
 			_audioService = new AudioService();
 			_messageService = new MessageService();
 			_audioBridge = new AudioBridge();
-
 		}
 
 		[Command("join", RunMode = RunMode.Async)]
@@ -105,6 +104,22 @@ namespace MusicBot
 
 		    await _audioService.Pause(Context.Guild, Context.Channel);
 
+	    }
+
+	    [Command("reauth", RunMode = RunMode.Async)]
+		public async Task Reauth()
+	    {
+
+		    if (!Config.Bot.Spotify)
+			    return;
+
+		    if (!ulong.TryParse(Config.Bot.OwnerID, out var k))
+			    return;
+
+		    if (Context.User.Id != k)
+			    return;
+
+			SpotifyClient.GetInstance.InitializeClientAsync();
 	    }
 	}           
 }

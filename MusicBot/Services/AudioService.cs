@@ -15,9 +15,14 @@ namespace MusicBot
 		private static readonly ConcurrentDictionary<ulong, ServerProperties> _serverProperties =
 			new ConcurrentDictionary<ulong, ServerProperties>();
 
+		private SpotifyService _spotifyService { get; }
+
 		public AudioService()
 		{
 			_messageService = new MessageService();
+
+			_spotifyService = new SpotifyService();
+
 		}
 
 		private MessageService _messageService { get; }
@@ -61,10 +66,8 @@ namespace MusicBot
 			return audioClient;
 		}
 
-		public async Task AddToQueue(string link, IGuild guild, IMessageChannel channel)
+		public async Task AddToQueue(string link, IGuild guild, IMessageChannel channel, string username)
 		{
-
-			await channel.TriggerTypingAsync();
 
 			if (link.Contains("soundcloud.com"))
 			{
@@ -76,6 +79,91 @@ namespace MusicBot
 				_serverProperties[guild.Id].QueueNames.Add("Soundcloud track");
 
 				_serverProperties[guild.Id].QueueURLs.Add(link.Replace(" ", ""));
+
+			}
+
+			else if (link.Contains("album:"))
+			{
+
+				if (!Config.Bot.Spotify)
+				{
+
+					await channel.SendMessageAsync(
+						"Spotify features are disabled on this bot. Please ask the bot owner to enable them.");
+
+					return;
+
+				}
+
+				if (!SpotifyClient.GetInstance.Auth)
+				{
+
+					await channel.SendMessageAsync(
+						"Spotify reauthentification required. Please ask the bot owner to reauthenticate.");
+
+					return;
+
+				}
+
+				var tracks = await _spotifyService.GetAlbumAsync(link.Replace("album:", ""), channel, guild);
+
+				foreach (var track in tracks)
+				{
+
+					var task = Task.Run(() => SearchYoutube(
+						$"-f bestaudio -g -x ytsearch:\"{track.Artists[0].Name + track.Name}\"",
+						$"--get-thumbnail ytsearch:\"{track.Artists[0].Name + track.Name}\"",
+						$"--get-id ytsearch:\"{track.Artists[0].Name + track.Name}\"",
+						$"-e --encoding UTF-16 ytsearch:\"{track.Artists[0].Name + track.Name}\"", true,
+						guild));
+
+					task.Wait();
+
+					PlayQueue(guild, channel);
+
+				}
+			}
+
+			else if (link.Contains("playlist:"))
+			{
+
+				if (!Config.Bot.Spotify)
+				{
+
+					await channel.SendMessageAsync(
+						"Spotify features are disabled on this bot. Please ask the bot owner to enable them.");
+
+					return;
+
+				}
+
+				if(!SpotifyClient.GetInstance.Auth)
+				{
+
+					await channel.SendMessageAsync(
+						"Spotify reauthentification required. Please ask the bot owner to reauthenticate.");
+
+					return;
+
+				}
+
+				var tracks = await _spotifyService.GetPlaylistAsync(link.Replace("playlist:", ""), channel, guild);
+
+				foreach (var track in tracks)
+				{
+
+					var task = Task.Run(() => SearchYoutube(
+						$"-f bestaudio -g -x ytsearch:\"{track.Track.Artists[0].Name + track.Track.Name}\"",
+						$"--get-thumbnail ytsearch:\"{track.Track.Artists[0].Name + track.Track.Name}\"",
+						$"--get-id ytsearch:\"{track.Track.Artists[0].Name + track.Track.Name}\"",
+						$"-e --encoding UTF-16 ytsearch:\"{track.Track.Artists[0].Name + track.Track.Name}\"", true,
+						guild));
+
+					task.Wait();
+
+					PlayQueue(guild, channel);
+
+				}
 
 			}
 
@@ -213,6 +301,9 @@ namespace MusicBot
 
 		public async Task CheckActivity(IGuild guild, IMessageChannel channel, string username)
 		{
+			if (_serverProperties[guild.Id].Queue.Count == 0)
+				return;
+
 			if (_serverProperties[guild.Id].Playing)
 				await _messageService.AddedMessage(
 					channel,
@@ -344,6 +435,13 @@ namespace MusicBot
 		private void AddName(string args, IGuild guild)
 		{
 			_serverProperties[guild.Id].QueueNames.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
+		}
+
+		private void AddTrack()
+		{
+
+
+
 		}
 
 		private void ClearProperties(IGuild guild)

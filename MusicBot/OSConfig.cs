@@ -1,5 +1,4 @@
-﻿using System.Runtime;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using MusicBot.ProcessManagers;
 
 namespace MusicBot
@@ -8,7 +7,7 @@ namespace MusicBot
     {
 
         private static bool isWindows =
-            System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         public static string ffmpegProcess;
 

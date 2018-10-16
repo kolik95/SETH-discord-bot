@@ -60,5 +60,14 @@ namespace MusicBot
 
 		}
 
+		[Command("Select")]
+		public async Task Select([Remainder]string input)
+		{
+
+			if (!int.TryParse(input, out int k)) return;
+
+			SpotifyService.Selections[Context.Guild.Id] = k;
+
+		}
 	}
 }
