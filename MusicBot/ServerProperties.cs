@@ -6,14 +6,8 @@ namespace MusicBot
 {
 	public class ServerProperties
     {
-        
-        public List<string> Queue { get; }
 
-		public List<string> QueueNames { get; }
-
-		public List<string> QueueThumbnails { get; }
-
-		public List<string> QueueURLs { get; }
+		public List<Track> Queue { get; }
 
 		public bool Repeat { get; set; }
 
@@ -27,10 +21,7 @@ namespace MusicBot
 
         public ServerProperties()
         {
-            Queue = new List<string>();
-			QueueNames = new List<string>();
-			QueueThumbnails = new List<string>();
-			QueueURLs = new List<string>();
+			Queue = new List<Track>();
 			Repeat = false;
             Playing = false;
 	        IsSuspended = false;

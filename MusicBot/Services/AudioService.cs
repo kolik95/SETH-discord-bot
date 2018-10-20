@@ -72,13 +72,18 @@ namespace MusicBot
 			if (link.Contains("soundcloud.com"))
 			{
 
-				AddSong($"-f bestaudio -g \"{link.Replace(" ", "")}\"", guild);
+				_serverProperties[guild.Id].Queue.Add(new Track
+				{
 
-				_serverProperties[guild.Id].QueueThumbnails.Add("https://pmcvariety.files.wordpress.com/2018/02/soundcloud-logo.jpg?w=814");
+					DirectURL = StartYoutubeDL($"-f bestaudio -g \"{link.Replace(" ", "")}\"").StandardOutput.ReadLine(),
 
-				_serverProperties[guild.Id].QueueNames.Add("Soundcloud track");
+					Name = "Soundcloud track",
 
-				_serverProperties[guild.Id].QueueURLs.Add(link.Replace(" ", ""));
+					YoutubeURL = link.Replace(" ", ""),
+
+					Thumbnail = "https://pmcvariety.files.wordpress.com/2018/02/soundcloud-logo.jpg?w=814"
+
+				});
 
 			}
 
@@ -212,21 +217,21 @@ namespace MusicBot
 				return;
 			}
 
-			if (_serverProperties[guild.Id].Playing == false)
+			if (!_serverProperties[guild.Id].Playing)
 			{
-				_serverProperties[guild.Id].Playing = true;
+				_serverProperties[guild.Id].Playing = !_serverProperties[guild.Id].Playing;
 
 				if (!_serverProperties[guild.Id].Repeat)
 					await _messageService.PlayingMessage(
 						channel,
 						Color.Blue,
-						_serverProperties[guild.Id].QueueNames[0],
-						_serverProperties[guild.Id].QueueURLs[0],
-						_serverProperties[guild.Id].QueueThumbnails[0]);
+						_serverProperties[guild.Id].Queue[0].Name,
+						_serverProperties[guild.Id].Queue[0].YoutubeURL,
+						_serverProperties[guild.Id].Queue[0].Thumbnail);
 
 				await SendAudioAsync(
 					_serverProperties[guild.Id].ConnectedChannel,
-					_serverProperties[guild.Id].Queue[0],
+					_serverProperties[guild.Id].Queue[0].DirectURL,
 					guild,
 					channel);
 			}
@@ -234,12 +239,10 @@ namespace MusicBot
 
 		public async Task ClearQueueAsync(IGuild guild)
 		{
+			
 			_serverProperties[guild.Id].Queue.Clear();
-			_serverProperties[guild.Id].QueueNames.Clear();
-			_serverProperties[guild.Id].QueueURLs.Clear();
-			_serverProperties[guild.Id].QueueThumbnails.Clear();
 
-			_serverProperties[guild.Id].Queue.Add("DummyItem123");
+			_serverProperties[guild.Id].Queue.Add(new Track());
 		}
 
 		public async Task Leave(IGuild guild)
@@ -288,12 +291,12 @@ namespace MusicBot
 		{
 			var fields = new List<EmbedFieldBuilder>();
 
-			for (var i = 1; i < _serverProperties[guild.Id].QueueNames.Count; i++)
+			for (var i = 1; i < _serverProperties[guild.Id].Queue.Count; i++)
 				fields.Add(new EmbedFieldBuilder
 				{
-					Name = $"{i}.{_serverProperties[guild.Id].QueueNames[i]}",
+					Name = $"{i}.{_serverProperties[guild.Id].Queue[i].Name}",
 
-					Value = _serverProperties[guild.Id].QueueURLs[i]
+					Value = _serverProperties[guild.Id].Queue[i].YoutubeURL
 				});
 
 			await _messageService.QueueMessage(channel, fields);
@@ -308,8 +311,8 @@ namespace MusicBot
 				await _messageService.AddedMessage(
 					channel,
 					Color.LightGrey,
-					_serverProperties[guild.Id].QueueURLs[_serverProperties[guild.Id].QueueURLs.Count - 1]
-					, _serverProperties[guild.Id].QueueThumbnails[_serverProperties[guild.Id].QueueThumbnails.Count - 1],
+					_serverProperties[guild.Id].Queue[_serverProperties[guild.Id].Queue.Count - 1].YoutubeURL,
+					_serverProperties[guild.Id].Queue[_serverProperties[guild.Id].Queue.Count - 1].Thumbnail,
 					username);
 		}
 
@@ -349,19 +352,22 @@ namespace MusicBot
 
 		private void SearchYoutube(string args1, string args2, string args3, string args4, bool link, IGuild guild)
 		{
-			var thread1 = new Thread(() => AddSong(args1, guild));
+
+			var track = new Track();
+
+			var thread1 = new Thread(() => AddSong(args1, ref track));
 
 			thread1.Start();
 
-			var thread2 = new Thread(() => AddThumbnail(args2, guild));
+			var thread2 = new Thread(() => AddThumbnail(args2, ref track));
 
 			thread2.Start();
 
-			var thread3 = new Thread(() => AddURL(args3, link, guild));
+			var thread3 = new Thread(() => AddURL(args3, link, ref track));
 
 			thread3.Start();
 
-			var thread4 = new Thread(() => AddName(args4, guild));
+			var thread4 = new Thread(() => AddName(args4, ref track));
 
 			thread4.Start();
 
@@ -369,6 +375,8 @@ namespace MusicBot
 			thread2.Join();
 			thread3.Join();
 			thread4.Join();
+
+			_serverProperties[guild.Id].Queue.Add(track);
 		}
 
 		private async Task PlayAfterSkip(IGuild guild, IMessageChannel channel)
@@ -405,17 +413,17 @@ namespace MusicBot
 
 		#region QueueUtilities
 
-		private void AddSong(string args, IGuild guild)
+		private void AddSong(string args, ref Track track)
 		{
-			_serverProperties[guild.Id].Queue.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
+			track.DirectURL = StartYoutubeDL(args).StandardOutput.ReadLine();
 		}
 
-		private void AddThumbnail(string args, IGuild guild)
+		private void AddThumbnail(string args, ref Track track)
 		{
-			_serverProperties[guild.Id].QueueThumbnails.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
+			track.Thumbnail = StartYoutubeDL(args).StandardOutput.ReadLine();
 		}
 
-		private void AddURL(string args, bool build, IGuild guild)
+		private void AddURL(string args, bool build, ref Track track)
 		{
 			if (build)
 			{
@@ -424,35 +432,22 @@ namespace MusicBot
 				builder.Append("https://www.youtube.com/watch?v=")
 					.Append(StartYoutubeDL(args).StandardOutput.ReadLine());
 
-				_serverProperties[guild.Id].QueueURLs.Add(builder.ToString());
+				track.YoutubeURL = builder.ToString();
 			}
 			else
 			{
-				_serverProperties[guild.Id].QueueURLs.Add(args);
+				track.YoutubeURL = args;
 			}
 		}
 
-		private void AddName(string args, IGuild guild)
+		private void AddName(string args, ref Track track)
 		{
-			_serverProperties[guild.Id].QueueNames.Add(StartYoutubeDL(args).StandardOutput.ReadLine());
-		}
-
-		private void AddTrack()
-		{
-
-
-
+			track.Name = StartYoutubeDL(args).StandardOutput.ReadLine();
 		}
 
 		private void ClearProperties(IGuild guild)
 		{
 			_serverProperties[guild.Id].Queue.Clear();
-
-			_serverProperties[guild.Id].QueueNames.Clear();
-
-			_serverProperties[guild.Id].QueueThumbnails.Clear();
-
-			_serverProperties[guild.Id].QueueURLs.Clear();
 
 			_serverProperties[guild.Id].Repeat = false;
 
@@ -462,12 +457,6 @@ namespace MusicBot
         private void RemoveQueueItem(IGuild guild, int item)
         {
             _serverProperties[guild.Id].Queue.RemoveAt(item);
-
-            _serverProperties[guild.Id].QueueNames.RemoveAt(item);
-
-            _serverProperties[guild.Id].QueueThumbnails.RemoveAt(item);
-
-            _serverProperties[guild.Id].QueueURLs.RemoveAt(item);
         }
 
         #endregion
