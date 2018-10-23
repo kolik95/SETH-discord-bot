@@ -2,6 +2,9 @@
 using Discord.WebSocket;
 using SimpleTCP;
 using System;
+using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +18,8 @@ namespace MusicBot
 		private DiscordSocketClient _client;
 
 		private AudioBridge _audioBridge;
+
+	    private List<Socket> clients;
 
 		public CompanionAppHandler(DiscordSocketClient Client)
 		{
@@ -44,6 +49,8 @@ namespace MusicBot
 
 			Console.WriteLine("Client connected");
 
+			clients.Add(e.Client);
+
 		}
 
 		private void Start()
@@ -60,17 +67,14 @@ namespace MusicBot
 
 			var parsedMessage = e.MessageString.Split("|p");
 
-			var user = _client.GetUser(ulong.Parse(parsedMessage[2]));
-
 			var guild = _client.GetGuild(ulong.Parse(parsedMessage[1]));
 
 			var channel = guild.GetTextChannel(ulong.Parse(parsedMessage[3]));
 
 			var voice = guild.GetVoiceChannel(ulong.Parse(parsedMessage[4]));
 
-			await _audioBridge.Play(parsedMessage[5], voice, guild, channel, user.Username);
+			await _audioBridge.Play(parsedMessage[5], voice, guild, channel, "Companion APP");
 
 		}
-
     }
 }

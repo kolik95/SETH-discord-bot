@@ -29,6 +29,11 @@ namespace MusicBot
 
 		#region Public Methods
 
+		/// <summary>
+		/// Returns the current voice channel
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <returns></returns>
 		public IAudioClient CheckForActiveChannel(IGuild guild)
 		{
 			IAudioClient audioClient;
@@ -53,11 +58,21 @@ namespace MusicBot
 			return audioClient;
 		}
 
+		/// <summary>
+		/// Joins a voice channel
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="voice"></param>
+		/// <param name="channel"></param>
+		/// <returns></returns>
 		public async Task<IAudioClient> Join(IGuild guild, IVoiceChannel voice, IMessageChannel channel)
 		{
 			var target = voice;
 
 			if (target.Guild.Id != guild.Id) return null;
+
+			if (_serverProperties[guild.Id].ConnectedChannel != null)
+				return _serverProperties[guild.Id].ConnectedChannel;
 
 			var audioClient = await target.ConnectAsync();
 
@@ -66,7 +81,15 @@ namespace MusicBot
 			return audioClient;
 		}
 
-		public async Task AddToQueue(string link, IGuild guild, IMessageChannel channel, string username)
+		/// <summary>
+		/// Adds the input to the queue
+		/// </summary>
+		/// <param name="link"></param>
+		/// <param name="guild"></param>
+		/// <param name="channel"></param>
+		/// <param name="username"></param>
+		/// <returns></returns>
+		public async Task AddToQueue(string link, IGuild guild, IMessageChannel channel,IVoiceChannel voice , string username)
 		{
 
 			if (link.Contains("soundcloud.com"))
@@ -96,7 +119,7 @@ namespace MusicBot
 					await channel.SendMessageAsync(
 						"Spotify features are disabled on this bot. Please ask the bot owner to enable them.");
 
-					return;
+					Thread.CurrentThread.Abort();
 
 				}
 
@@ -106,7 +129,7 @@ namespace MusicBot
 					await channel.SendMessageAsync(
 						"Spotify reauthentification required. Please ask the bot owner to reauthenticate.");
 
-					return;
+					Thread.CurrentThread.Abort();
 
 				}
 
@@ -114,6 +137,8 @@ namespace MusicBot
 
 				foreach (var track in tracks)
 				{
+
+					await Join(guild, voice, channel);
 
 					var task = Task.Run(() => SearchYoutube(
 						$"-f bestaudio -g -x ytsearch:\"{track.Artists[0].Name + track.Name}\"",
@@ -138,7 +163,7 @@ namespace MusicBot
 					await channel.SendMessageAsync(
 						"Spotify features are disabled on this bot. Please ask the bot owner to enable them.");
 
-					return;
+					Thread.CurrentThread.Abort();
 
 				}
 
@@ -148,7 +173,7 @@ namespace MusicBot
 					await channel.SendMessageAsync(
 						"Spotify reauthentification required. Please ask the bot owner to reauthenticate.");
 
-					return;
+					Thread.CurrentThread.Abort();
 
 				}
 
@@ -156,6 +181,8 @@ namespace MusicBot
 
 				foreach (var track in tracks)
 				{
+
+					await Join(guild, voice, channel);
 
 					var task = Task.Run(() => SearchYoutube(
 						$"-f bestaudio -g -x ytsearch:\"{track.Track.Artists[0].Name + track.Track.Name}\"",
@@ -206,13 +233,18 @@ namespace MusicBot
 			}
 		}
 
+		/// <summary>
+		/// Starts playing the first item in the queue
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="channel"></param>
+		/// <returns></returns>
 		public async Task PlayQueue(IGuild guild, IMessageChannel channel)
 		{
-			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
-
-			if (_serverProperties[guild.Id].Queue.Count == 0)
+			if (_serverProperties[guild.Id].ConnectedChannel == null ||
+			    _serverProperties[guild.Id].Queue.Count == 0)
 			{
-                await Leave(guild);
+				await Leave(guild);
 
 				return;
 			}
@@ -237,6 +269,11 @@ namespace MusicBot
 			}
 		}
 
+		/// <summary>
+		/// Removes everything from the queue
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <returns></returns>
 		public async Task ClearQueueAsync(IGuild guild)
 		{
 			
@@ -245,6 +282,11 @@ namespace MusicBot
 			_serverProperties[guild.Id].Queue.Add(new Track());
 		}
 
+		/// <summary>
+		/// Leaves the current voice channel
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <returns></returns>
 		public async Task Leave(IGuild guild)
 		{
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
@@ -253,11 +295,17 @@ namespace MusicBot
 
 			ClearProperties(guild);
 
-			_serverProperties[guild.Id].Playing = false;
-
 			await client.StopAsync();
+
+			_serverProperties[guild.Id].ConnectedChannel = null;
 		}
 
+		/// <summary>
+		/// Changes the repeat value
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="channel"></param>
+		/// <returns></returns>
 		public async Task SetRepeat(IGuild guild, IMessageChannel channel)
 		{
 			if (_serverProperties[guild.Id].Repeat)
@@ -275,6 +323,12 @@ namespace MusicBot
 			}
 		}
 
+		/// <summary>
+		/// Skips the current playing track
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="channel"></param>
+		/// <returns></returns>
 		public async Task Skip(IGuild guild, IMessageChannel channel)
 		{
 			if (_serverProperties[guild.Id].Playing)
@@ -287,6 +341,12 @@ namespace MusicBot
 			}
 		}
 
+		/// <summary>
+		/// Sends the queue to the user
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="channel"></param>
+		/// <returns></returns>
 		public async Task SendQueue(IGuild guild, IMessageChannel channel)
 		{
 			var fields = new List<EmbedFieldBuilder>();
@@ -302,6 +362,13 @@ namespace MusicBot
 			await _messageService.QueueMessage(channel, fields);
 		}
 
+		/// <summary>
+		/// Checks if the bot is busy playing
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="channel"></param>
+		/// <param name="username"></param>
+		/// <returns></returns>
 		public async Task CheckActivity(IGuild guild, IMessageChannel channel, string username)
 		{
 			if (_serverProperties[guild.Id].Queue.Count == 0)
@@ -315,6 +382,19 @@ namespace MusicBot
 					_serverProperties[guild.Id].Queue[_serverProperties[guild.Id].Queue.Count - 1].Thumbnail,
 					username);
 		}
+
+
+		/// <summary>
+		/// Removes a specific item from the queue
+		/// </summary>
+		/// <param name="guild"></param>
+		/// <param name="item"></param>
+		/// <returns></returns>
+        public async Task RemoveAt(IGuild guild, int item) => RemoveQueueItem(guild, item);
+
+		#endregion
+
+		#region Private Methods
 
 		private async Task SendAudioAsync(IAudioClient client, string path, IGuild guild, IMessageChannel channel)
 		{
@@ -335,17 +415,13 @@ namespace MusicBot
 			await discord.FlushAsync();
 		}
 
-        public async Task RemoveAt(IGuild guild, int item) => RemoveQueueItem(guild, item);
-
-        #endregion
-
-        #region Private Methods
-
-        private void StreamEnded(object sender, EventArgs e, IGuild guild, IMessageChannel channel)
+		private void StreamEnded(object sender, EventArgs e, IGuild guild, IMessageChannel channel)
 		{
 			_serverProperties[guild.Id].Playing = false;
 
 			if (!_serverProperties[guild.Id].Repeat) RemoveQueueItem(guild, 0);
+
+			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
 			new Thread(async () => await PlayAfterSkip(guild, channel)).Start();
 		}
@@ -451,7 +527,6 @@ namespace MusicBot
 
 			_serverProperties[guild.Id].Repeat = false;
 
-			_serverProperties[guild.Id].ConnectedChannel = null;
 		}
 
         private void RemoveQueueItem(IGuild guild, int item)
