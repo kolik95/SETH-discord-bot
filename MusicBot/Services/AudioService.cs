@@ -241,8 +241,9 @@ namespace MusicBot
 		/// <returns></returns>
 		public async Task PlayQueue(IGuild guild, IMessageChannel channel)
 		{
-			if (_serverProperties[guild.Id].ConnectedChannel == null ||
-			    _serverProperties[guild.Id].Queue.Count == 0)
+			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
+
+			if (_serverProperties[guild.Id].Queue.Count == 0)
 			{
 				await Leave(guild);
 
@@ -276,10 +277,11 @@ namespace MusicBot
 		/// <returns></returns>
 		public async Task ClearQueueAsync(IGuild guild)
 		{
-			
+
 			_serverProperties[guild.Id].Queue.Clear();
 
 			_serverProperties[guild.Id].Queue.Add(new Track());
+
 		}
 
 		/// <summary>
@@ -296,8 +298,6 @@ namespace MusicBot
 			ClearProperties(guild);
 
 			await client.StopAsync();
-
-			_serverProperties[guild.Id].ConnectedChannel = null;
 		}
 
 		/// <summary>
@@ -419,11 +419,11 @@ namespace MusicBot
 		{
 			_serverProperties[guild.Id].Playing = false;
 
-			if (!_serverProperties[guild.Id].Repeat) RemoveQueueItem(guild, 0);
+			if (!_serverProperties[guild.Id].Repeat && _serverProperties[guild.Id].Queue.Count != 0) RemoveQueueItem(guild, 0);
 
 			if (_serverProperties[guild.Id].ConnectedChannel == null) return;
 
-			new Thread(async () => await PlayAfterSkip(guild, channel)).Start();
+			new Thread(()=> PlayAfterSkip(guild, channel)).Start();
 		}
 
 		private void SearchYoutube(string args1, string args2, string args3, string args4, bool link, IGuild guild)
@@ -457,7 +457,7 @@ namespace MusicBot
 
 		private async Task PlayAfterSkip(IGuild guild, IMessageChannel channel)
 		{
-			Thread.Sleep(3000);
+			await Task.Delay(3000);
 
             await PlayQueue(guild, channel);
 		}
@@ -525,20 +525,21 @@ namespace MusicBot
 		{
 			_serverProperties[guild.Id].Queue.Clear();
 
+			_serverProperties[guild.Id].ConnectedChannel = null;
+
+			_serverProperties[guild.Id].Playing = false;
+
 			_serverProperties[guild.Id].Repeat = false;
 
 		}
 
-        private void RemoveQueueItem(IGuild guild, int item)
-        {
-            _serverProperties[guild.Id].Queue.RemoveAt(item);
-        }
+        private void RemoveQueueItem(IGuild guild, int item) => _serverProperties[guild.Id].Queue.RemoveAt(item);
 
-        #endregion
+		#endregion
 
-        #region Processes
+		#region Processes
 
-        private Process CreateStream(string path)
+		private Process CreateStream(string path)
 		{
 			var ffmpeg = new ProcessStartInfo
 			{
